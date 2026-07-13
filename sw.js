@@ -2,10 +2,11 @@ const CACHE_NAME = "naam-jaap-counter-v2-6-1-tap-animation";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=260",
+    "./style.css?v=261",
     "./config.js?v=260",
     "./offline.js?v=260",
     "./api.js?v=260",
+    "./app.js?v=261",
     "./auth.js?v=260",
     "./settings.js?v=260",
     "./history.js?v=260",
