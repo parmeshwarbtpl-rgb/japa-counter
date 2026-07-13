@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="A simple digital Naam Jaap and mantra counter with Google Sheets synchronization.">
+    <meta name="theme-color" content="#ff6f00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>Naam Jaap Counter v2.x</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">ॐ</div>
+        <div>
+            <h1>Naam Jaap Counter</h1>
+            <p id="connectionText" class="connection-text">Connecting…</p>
+        </div>
+    </header>
+
+    <div id="offlineBanner" class="offline-banner" hidden>
+        You are offline. Saved settings remain available; cloud updates need internet.
+    </div>
+
+    <main class="app-shell">
+        <section id="dashboardView" class="view active" data-view="dashboard" aria-labelledby="dashboardTitle">
+            <h2 id="dashboardTitle" class="sr-only">Dashboard</h2>
+
+            <section class="card counter-card">
+                <p class="eyebrow">Selected Mantra</p>
+                <h3 id="mantra" class="mantra-text">ॐ नमः शिवाय</h3>
+
+                <div id="counter" class="counter" aria-live="polite">0</div>
+
+                <button id="tapBtn" class="tap-btn" type="button" aria-label="Add one jaap count">
+                    <span class="tap-value">+1</span>
+                    <span class="tap-label">Tap to count</span>
+                </button>
+            </section>
+
+            <section class="stats" aria-label="Jaap statistics">
+                <article class="stat-card">
+                    <span>Today</span>
+                    <strong id="today">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Lifetime</span>
+                    <strong id="lifetime">0</strong>
+                </article>
+            </section>
+
+            <section class="card target-card">
+                <div class="section-heading-row">
+                    <div>
+                        <p class="eyebrow">Daily Target</p>
+                        <h3><span id="targetCurrent">0</span> / <span id="targetTotal">108</span></h3>
+                    </div>
+                    <strong id="targetPercent" class="target-percent">0%</strong>
+                </div>
+                <div class="progress-track" role="progressbar" aria-label="Daily target progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div id="targetProgress" class="progress-fill"></div>
+                </div>
+            </section>
+
+            <section class="card form-card">
+                <label for="mantraSelect">Select Mantra</label>
+                <select id="mantraSelect">
+                    <option value="ॐ नमः शिवाय">ॐ नमः शिवाय</option>
+                    <option value="ॐ गं गणपतये नमः">ॐ गं गणपतये नमः</option>
+                    <option value="श्री राम जय राम जय जय राम">श्री राम जय राम जय जय राम</option>
+                    <option value="ॐ नमो भगवते वासुदेवाय">ॐ नमो भगवते वासुदेवाय</option>
+                    <option value="हरे कृष्ण हरे कृष्ण">हरे कृष्ण हरे कृष्ण</option>
+                </select>
+            </section>
+
+            <section class="card action-buttons" aria-label="Reset counter actions">
+                <button id="resetTodayBtn" class="secondary-btn" type="button">Reset Today</button>
+                <button id="resetAllBtn" class="danger-btn" type="button">Reset Lifetime</button>
+            </section>
+        </section>
+
+        <section id="historyView" class="view" data-view="history" aria-labelledby="historyTitle" hidden>
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Google Sheets</p>
+                    <h2 id="historyTitle">Jaap History</h2>
+                </div>
+                <button id="refreshHistoryBtn" class="icon-btn" type="button" aria-label="Refresh history">↻</button>
+            </div>
+
+            <section id="historySummary" class="stats history-summary" aria-label="History summary">
+                <article class="stat-card">
+                    <span>Entries</span>
+                    <strong id="historyEntries">0</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Added</span>
+                    <strong id="historyAdded">0</strong>
+                </article>
+            </section>
+
+            <div id="historyLoading" class="state-card" hidden>
+                <span class="spinner" aria-hidden="true"></span>
+                <p>Loading history…</p>
+            </div>
+
+            <div id="historyEmpty" class="state-card" hidden>
+                <div class="state-icon" aria-hidden="true">🕉️</div>
+                <h3>No history found</h3>
+                <p>Your jaap activity will appear here after counting.</p>
+            </div>
+
+            <div id="historyError" class="state-card error-state" hidden>
+                <div class="state-icon" aria-hidden="true">!</div>
+                <h3>History could not be loaded</h3>
+                <p id="historyErrorText">Please check your connection and try again.</p>
+                <button id="retryHistoryBtn" class="secondary-btn" type="button">Try Again</button>
+            </div>
+
+            <div id="historyList" class="history-list" aria-live="polite"></div>
+        </section>
+
+        <section id="settingsView" class="view" data-view="settings" aria-labelledby="settingsTitle" hidden>
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Preferences</p>
+                    <h2 id="settingsTitle">Settings</h2>
+                </div>
+            </div>
+
+            <section class="card settings-card">
+                <div class="setting-row">
+                    <div>
+                        <label for="voiceEnabled">Voice Support</label>
+                        <p>Allow the browser to speak the selected mantra.</p>
+                    </div>
+                    <label class="switch">
+                        <input id="voiceEnabled" type="checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <div>
+                        <label for="autoSpeakEnabled">Auto Speak</label>
+                        <p>Speak the mantra automatically after each successful count.</p>
+                    </div>
+                    <label class="switch">
+                        <input id="autoSpeakEnabled" type="checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-field">
+                    <label for="voiceSelect">Voice</label>
+                    <select id="voiceSelect">
+                        <option value="">Automatic Hindi voice</option>
+                    </select>
+                    <p id="voiceHelp" class="field-help">Voice availability depends on your device and browser.</p>
+                </div>
+
+                <div class="setting-field">
+                    <label for="dailyTargetInput">Daily Target</label>
+                    <input id="dailyTargetInput" type="number" min="1" max="1000000" step="1" inputmode="numeric">
+                    <p class="field-help">Common targets: 108, 1008, or your personal sankalp.</p>
+                </div>
+
+                <button id="testVoiceBtn" class="secondary-btn full-width" type="button">Test Selected Voice</button>
+            </section>
+
+            <section class="card install-card">
+                <div>
+                    <p class="eyebrow">Progressive Web App</p>
+                    <h3>Install Naam Jaap Counter</h3>
+                    <p id="installHelp">Install it on your phone for an app-like experience.</p>
+                </div>
+                <button id="installAppBtn" class="primary-btn" type="button" hidden>Install App</button>
+            </section>
+
+            <section class="card about-card">
+                <p class="eyebrow">About</p>
+                <h3>Naam Jaap Counter v2.x</h3>
+                <p>Frontend: HTML, CSS and Vanilla JavaScript</p>
+                <p>Backend: Google Apps Script and Google Sheets</p>
+            </section>
+        </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Primary navigation">
+        <button id="dashboardTab" class="nav-btn active" type="button" data-target="dashboard" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">▦</span>
+            <span>Dashboard</span>
+        </button>
+        <button id="historyTab" class="nav-btn" type="button" data-target="history">
+            <span class="nav-icon" aria-hidden="true">↺</span>
+            <span>History</span>
+        </button>
+        <button id="settingsTab" class="nav-btn" type="button" data-target="settings">
+            <span class="nav-icon" aria-hidden="true">⚙</span>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
