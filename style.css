@@ -1038,3 +1038,26 @@ input[type="number"] {
         grid-column: auto;
     }
 }
+
+.offline-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.banner-action {
+    min-height: 34px;
+    padding: 7px 12px;
+    color: #7c2d12;
+    background: #fff;
+    border: 1px solid #fdba74;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.banner-action:hover {
+    background: #fff7ed;
+}

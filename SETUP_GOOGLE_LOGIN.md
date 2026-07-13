@@ -66,6 +66,7 @@ The `apps-script` folder contains:
 01_Server_SECURE_REPLACEMENT.gs
 06_Auth.gs
 07_UserActivity.gs
+08_OfflineSync.gs
 99_Auth_Setup.gs
 ```
 
@@ -79,7 +80,7 @@ Replace the contents of the existing `01_Server.gs` with the contents of:
 
 Do not keep the old public `doGet` action router. If it remains active, unauthenticated users may bypass Google login through the old GET URLs.
 
-Then add the other three `.gs` files to the Apps Script project.
+Then add/update the other four `.gs` files in the Apps Script project.
 
 The secure router calls the existing functions:
 
@@ -114,6 +115,7 @@ The setup automatically creates these sheets:
 - `Users`
 - `Devices`
 - `User_Activity`
+- `Sync_Operations`
 
 If the Apps Script project is not bound to the Google Sheet, paste the Sheet ID in `setAuthSpreadsheetId()` and run that function once.
 
@@ -198,3 +200,12 @@ Shows who performed each count, mantra change, and reset, along with the Device 
 - Device information is approximate; browsers do not reliably expose an exact physical phone model.
 - Clearing site data creates a new local device ID and therefore a new Device Key.
 - Google login identifies the Google account, not necessarily the human holding a shared device.
+
+
+## v2.6 Offline Safe setup
+
+The `08_OfflineSync.gs` file adds an idempotency register named `Sync_Operations`. Each queued count/mantra operation has a stable unique ID. Once that ID is marked `DONE`, a retry returns the stored result rather than applying the action again.
+
+Run `setupSecureAuthentication()` again after adding `08_OfflineSync.gs` so the new sheet is created. Then deploy a new Web App version before uploading the v2.6 frontend.
+
+Offline access stores a locally cached verified profile for seven days, but it does not store a long-lived Google token. Reconnection requires Google sign-in before the queue can sync.

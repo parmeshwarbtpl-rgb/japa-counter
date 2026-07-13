@@ -32,6 +32,8 @@ const elements = {
     installButton: document.getElementById("installAppBtn"),
     installHelp: document.getElementById("installHelp"),
     offlineBanner: document.getElementById("offlineBanner"),
+    offlineBannerText: document.getElementById("offlineBannerText"),
+    reconnectButton: document.getElementById("reconnectBtn"),
 };
 
 let appSettings = readSettings();
@@ -45,14 +47,14 @@ let dashboardState = {
 let historyLoaded = false;
 let deferredInstallPrompt = null;
 let authenticatedAppStarted = false;
+let dashboardLocalDate = offlineLocalDateKey();
 
-// Mobile-friendly optimistic counter sync. Taps update the screen immediately,
-// then a short burst is sent to Google Sheets as one batched request.
-const TAP_SYNC_DELAY_MS = 450;
-const TAP_RETRY_DELAY_MS = 3000;
-let pendingTapCount = 0;
-let tapSyncTimer = null;
-let tapSyncPromise = null;
+// Every tap is written to durable device storage before cloud sync.
+const TAP_SYNC_DELAY_MS = 650;
+const TAP_RETRY_DELAY_MS = 5000;
+let queueSyncTimer = null;
+let queueSyncPromise = null;
+let lastQueueToastAt = 0;
 
 function unwrapDashboardPayload(payload) {
     if (!payload || typeof payload !== "object") return {};
@@ -120,178 +122,276 @@ function updateTargetProgress() {
     elements.progressTrack.setAttribute("aria-valuenow", String(percent));
 }
 
-async function loadDashboard(options = {}) {
-    setConnectionStatus("loading", "Syncing with Google Sheets…");
+function currentUserId() {
+    return String(authState.user?.id || "");
+}
 
-    try {
-        const payload = await getDashboard();
-        updateDashboard(payload);
-        setConnectionStatus("online", "Synced with Google Sheets");
-
-        if (options.showSuccess) {
-            showToast("Dashboard refreshed.", "success");
-        }
-    } catch (error) {
-        console.error("Dashboard load failed:", error);
-        setConnectionStatus("error", "Cloud sync unavailable");
-        showToast(error.message || "Dashboard could not be loaded.", "error", 5000);
+function ensureCurrentLocalDay() {
+    const todayKey = offlineLocalDateKey();
+    if (dashboardLocalDate !== todayKey) {
+        dashboardLocalDate = todayKey;
+        dashboardState = { ...dashboardState, today: 0 };
+        updateDashboard(dashboardState);
     }
 }
 
-function scheduleTapSync(delayMs = TAP_SYNC_DELAY_MS) {
-    window.clearTimeout(tapSyncTimer);
-    tapSyncTimer = window.setTimeout(() => {
-        flushPendingTaps();
-    }, delayMs);
+function cacheDashboard() {
+    const userId = currentUserId();
+    if (!userId) return Promise.resolve();
+    return offlineSaveDashboard(userId, dashboardState).catch(error => {
+        console.error("Local dashboard cache failed:", error);
+    });
 }
 
-function mergeServerDashboardWithPending(payload) {
-    const data = unwrapDashboardPayload(payload);
-    const serverToday = Number(data.today ?? data.todayCount ?? data.daily ?? data.count);
-    const serverLifetime = Number(data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total);
-    const serverMantra = String(data.mantra ?? data.selectedMantra ?? dashboardState.mantra ?? "").trim();
-
-    return {
-        today: Number.isFinite(serverToday)
-            ? serverToday + pendingTapCount
-            : dashboardState.today,
-        lifetime: Number.isFinite(serverLifetime)
-            ? serverLifetime + pendingTapCount
-            : dashboardState.lifetime,
-        mantra: serverMantra || dashboardState.mantra,
-    };
-}
-
-function flushPendingTaps() {
-    window.clearTimeout(tapSyncTimer);
-    tapSyncTimer = null;
-
-    if (tapSyncPromise) return tapSyncPromise;
-    if (pendingTapCount <= 0 || !isAuthenticated()) return Promise.resolve(true);
-
-    const batchSize = pendingTapCount;
-    pendingTapCount = 0;
-    setConnectionStatus(
-        "loading",
-        batchSize > 1 ? `Syncing ${batchSize} counts…` : "Syncing count…"
-    );
-
-    tapSyncPromise = (async () => {
-        try {
-            const payload = await addCount(batchSize);
-            updateDashboard(mergeServerDashboardWithPending(payload));
-            historyLoaded = false;
-
-            if (pendingTapCount > 0) {
-                setConnectionStatus("loading", `Syncing ${pendingTapCount} pending…`);
-            } else {
-                setConnectionStatus("online", "Synced with Google Sheets");
-            }
-            return true;
-        } catch (error) {
-            // Keep the visible count and put the unsynced batch back in the queue.
-            pendingTapCount += batchSize;
-            console.error("Counter sync failed:", error);
-            setConnectionStatus(
-                "error",
-                `${pendingTapCount} count${pendingTapCount === 1 ? "" : "s"} waiting to sync`
-            );
-            showToast(
-                "Count is visible. Cloud sync will retry automatically.",
-                "error",
-                4500
-            );
-            return false;
-        } finally {
-            tapSyncPromise = null;
-            if (pendingTapCount > 0) {
-                scheduleTapSync(navigator.onLine ? TAP_RETRY_DELAY_MS : TAP_RETRY_DELAY_MS * 2);
-            }
-        }
-    })();
-
-    return tapSyncPromise;
-}
-
-async function syncPendingTapsBeforeCriticalAction() {
-    window.clearTimeout(tapSyncTimer);
-    tapSyncTimer = null;
-
-    if (tapSyncPromise) await tapSyncPromise;
-    if (pendingTapCount > 0) return flushPendingTaps();
+async function loadLocalDashboard() {
+    const userId = currentUserId();
+    if (!userId) return false;
+    const cached = await offlineLoadDashboard(userId);
+    if (!cached) {
+        updateDashboard({ today: 0, lifetime: 0, mantra: dashboardState.mantra });
+        dashboardLocalDate = offlineLocalDateKey();
+        return false;
+    }
+    dashboardLocalDate = cached.localDate || offlineLocalDateKey();
+    updateDashboard(cached);
     return true;
 }
 
+async function pendingSummary() {
+    const userId = currentUserId();
+    return userId
+        ? offlineGetPendingSummary(userId)
+        : { operations: 0, count: 0, mantraChanges: 0 };
+}
+
+function mergeServerDashboardWithPending(payload, pendingCount = 0, preserveLocalMantra = false) {
+    const data = unwrapDashboardPayload(payload);
+    const serverToday = Number(data.today ?? data.todayCount ?? data.daily ?? data.count);
+    const serverLifetime = Number(data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total);
+    const serverMantra = String(data.mantra ?? data.selectedMantra ?? "").trim();
+    return {
+        today: Number.isFinite(serverToday) ? serverToday + pendingCount : dashboardState.today,
+        lifetime: Number.isFinite(serverLifetime) ? serverLifetime + pendingCount : dashboardState.lifetime,
+        mantra: preserveLocalMantra
+            ? dashboardState.mantra
+            : (serverMantra || dashboardState.mantra),
+    };
+}
+
+async function loadDashboard(options = {}) {
+    if (!navigator.onLine || !isAuthenticated()) {
+        await loadLocalDashboard();
+        const summary = await pendingSummary();
+        setConnectionStatus("offline", summary.count
+            ? `Offline — ${summary.count} saved locally`
+            : "Offline — ready to count");
+        return;
+    }
+
+    setConnectionStatus("loading", "Syncing with Google Sheets…");
+    try {
+        const payload = await getDashboard();
+        const summary = await pendingSummary();
+        updateDashboard(mergeServerDashboardWithPending(payload, summary.count, summary.mantraChanges > 0));
+        dashboardLocalDate = offlineLocalDateKey();
+        await cacheDashboard();
+        setConnectionStatus("online", summary.operations
+            ? `${summary.count} count${summary.count === 1 ? "" : "s"} waiting to sync`
+            : "Synced with Google Sheets");
+
+        if (options.showSuccess) showToast("Dashboard refreshed.", "success");
+    } catch (error) {
+        console.error("Dashboard load failed:", error);
+        await loadLocalDashboard();
+        setConnectionStatus("error", "Cloud unavailable — using saved data");
+        if (options.showError !== false) {
+            showToast("Using offline data. Cloud sync will retry.", "error", 4500);
+        }
+    }
+}
+
+function scheduleQueueSync(delayMs = TAP_SYNC_DELAY_MS) {
+    window.clearTimeout(queueSyncTimer);
+    queueSyncTimer = window.setTimeout(() => flushOfflineQueue(), delayMs);
+}
+
+async function refreshPendingStatus() {
+    const summary = await pendingSummary();
+    if (!navigator.onLine) {
+        setConnectionStatus("offline", summary.count
+            ? `Offline — ${summary.count} saved locally`
+            : "Offline — ready to count");
+    } else if (!isAuthenticated()) {
+        setConnectionStatus("offline", summary.count
+            ? `Sign in to sync ${summary.count} saved counts`
+            : "Sign in to sync");
+    } else if (summary.operations) {
+        setConnectionStatus("loading", summary.count
+            ? `Syncing ${summary.count} saved counts…`
+            : "Syncing saved changes…");
+    } else {
+        setConnectionStatus("online", "Synced with Google Sheets");
+    }
+    return summary;
+}
+
+async function syncOneOfflineOperation(operation) {
+    await offlineMarkSyncing(operation.id);
+    try {
+        let payload;
+        if (operation.type === "COUNT") {
+            payload = await addCount(operation.count, operation.id, {
+                clientCreatedAt: operation.createdAt,
+                localDate: operation.localDate,
+                mantra: operation.mantra,
+            });
+        } else if (operation.type === "MANTRA") {
+            payload = await saveMantra(operation.mantra, operation.id);
+        } else {
+            throw new Error("Unsupported offline operation.");
+        }
+
+        await offlineCompleteOperation(operation.id);
+        const summary = await pendingSummary();
+        updateDashboard(mergeServerDashboardWithPending(payload, summary.count, true));
+        await cacheDashboard();
+        historyLoaded = false;
+        return true;
+    } catch (error) {
+        await offlineMarkPending(operation.id, error).catch(() => undefined);
+        throw error;
+    }
+}
+
+function flushOfflineQueue() {
+    window.clearTimeout(queueSyncTimer);
+    queueSyncTimer = null;
+
+    if (queueSyncPromise) return queueSyncPromise;
+    if (!navigator.onLine || !isAuthenticated()) return Promise.resolve(false);
+
+    offlineCloseActiveCountBatch();
+    queueSyncPromise = (async () => {
+        await offlineWaitForWrites();
+        const operations = await offlineListPending(currentUserId());
+        if (!operations.length) {
+            await refreshPendingStatus();
+            return true;
+        }
+
+        await refreshPendingStatus();
+        for (const operation of operations) {
+            try {
+                await syncOneOfflineOperation(operation);
+            } catch (error) {
+                console.error("Offline sync failed:", error);
+                setConnectionStatus("error", "Saved locally — sync will retry");
+                const now = Date.now();
+                if (now - lastQueueToastAt > 8000) {
+                    lastQueueToastAt = now;
+                    showToast("Your count is safe on this device. Sync will retry automatically.", "error", 5000);
+                }
+                scheduleQueueSync(TAP_RETRY_DELAY_MS);
+                return false;
+            }
+        }
+
+        try {
+            const server = await getDashboard();
+            const summary = await pendingSummary();
+            updateDashboard(mergeServerDashboardWithPending(server, summary.count));
+            await cacheDashboard();
+        } catch (error) {
+            console.warn("Post-sync dashboard refresh failed:", error);
+        }
+        await refreshPendingStatus();
+        return true;
+    })().finally(() => {
+        queueSyncPromise = null;
+    });
+
+    return queueSyncPromise;
+}
+
+async function syncQueueBeforeCriticalAction() {
+    await offlineWaitForWrites();
+    if (queueSyncPromise) await queueSyncPromise;
+    if (!navigator.onLine || !isAuthenticated()) return false;
+    await flushOfflineQueue();
+    const summary = await pendingSummary();
+    return summary.operations === 0;
+}
+
 function handleTap() {
-    // Optimistic UI: the user sees the count instantly, even on a slow mobile network.
-    pendingTapCount += 1;
+    if (!hasActiveAppSession()) return;
+    ensureCurrentLocalDay();
     dashboardState = {
         ...dashboardState,
         today: dashboardState.today + 1,
         lifetime: dashboardState.lifetime + 1,
     };
     updateDashboard(dashboardState, { animate: true });
-    setConnectionStatus("loading", `${pendingTapCount} pending sync…`);
     historyLoaded = false;
 
-    if (navigator.vibrate) navigator.vibrate(8);
+    offlineQueueCount({
+        userId: currentUserId(),
+        deviceKey: authState.deviceKey,
+        mantra: dashboardState.mantra,
+        count: 1,
+        dashboard: dashboardState,
+    }).then(() => {
+        refreshPendingStatus();
+        if (navigator.onLine && isAuthenticated()) scheduleQueueSync();
+    }).catch(error => {
+        console.error("Offline count save failed:", error);
+        showToast("This count could not be saved on the device.", "error", 5000);
+    });
 
+    if (navigator.vibrate) navigator.vibrate(8);
     if (appSettings.voiceEnabled && appSettings.autoSpeakEnabled) {
         speakMantra(dashboardState.mantra);
     }
-
-    scheduleTapSync();
 }
 
 async function handleMantraChange() {
     const nextMantra = elements.mantraSelect.value;
     const previousMantra = dashboardState.mantra;
-
-    if (!(await syncPendingTapsBeforeCriticalAction())) {
-        elements.mantraSelect.value = previousMantra;
-        showToast("Please wait for pending counts to sync before changing mantra.", "error", 4500);
-        return;
-    }
-
-    // Update immediately so the selected mantra never appears to jump back
-    // when the backend returns only { success, message }.
     dashboardState.mantra = nextMantra;
     elements.mantra.textContent = nextMantra;
     elements.mantraSelect.value = nextMantra;
-    elements.mantraSelect.disabled = true;
 
     try {
-        const payload = await saveMantra(nextMantra);
-        const data = unwrapDashboardPayload(payload);
-
-        // Preserve the chosen mantra and existing counters for partial API responses.
-        updateDashboard({
-            ...data,
-            today: data.today ?? data.todayCount ?? data.daily ?? data.count ?? dashboardState.today,
-            lifetime: data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? dashboardState.lifetime,
+        await offlineQueueMantra({
+            userId: currentUserId(),
+            deviceKey: authState.deviceKey,
             mantra: nextMantra,
+            dashboard: dashboardState,
         });
-
-        showToast("Mantra updated.", "success");
-
-        if (appSettings.voiceEnabled) {
-            speakMantra(nextMantra);
-        }
+        await cacheDashboard();
+        historyLoaded = false;
+        showToast(navigator.onLine && isAuthenticated()
+            ? "Mantra saved; syncing…"
+            : "Mantra saved offline.", "success");
+        if (appSettings.voiceEnabled) speakMantra(nextMantra);
+        await refreshPendingStatus();
+        if (navigator.onLine && isAuthenticated()) scheduleQueueSync(100);
     } catch (error) {
-        console.error("Mantra save failed:", error);
+        console.error("Mantra queue failed:", error);
         dashboardState.mantra = previousMantra;
         elements.mantra.textContent = previousMantra;
         elements.mantraSelect.value = previousMantra;
-        showToast(error.message || "Mantra could not be saved.", "error", 5000);
-    } finally {
-        elements.mantraSelect.disabled = false;
+        showToast("Mantra could not be saved on this device.", "error", 5000);
     }
 }
 
 async function handleResetToday() {
+    if (!navigator.onLine || !isAuthenticated()) {
+        showToast("Reset is disabled offline to prevent data conflicts.", "error", 4500);
+        return;
+    }
     if (!window.confirm("Reset today's counter to zero?")) return;
-    if (!(await syncPendingTapsBeforeCriticalAction())) {
-        showToast("Pending counts must sync before reset.", "error", 4500);
+    if (!(await syncQueueBeforeCriticalAction())) {
+        showToast("Saved offline counts must sync before reset.", "error", 4500);
         return;
     }
 
@@ -299,6 +399,8 @@ async function handleResetToday() {
     try {
         const payload = await resetToday();
         updateDashboard(payload);
+        dashboardLocalDate = offlineLocalDateKey();
+        await cacheDashboard();
         historyLoaded = false;
         showToast("Today's counter has been reset.", "success");
     } catch (error) {
@@ -310,12 +412,16 @@ async function handleResetToday() {
 }
 
 async function handleResetAll() {
+    if (!navigator.onLine || !isAuthenticated()) {
+        showToast("Lifetime reset is disabled offline.", "error", 4500);
+        return;
+    }
     const confirmed = window.confirm(
         "Reset the lifetime counter? This is a major action and cannot be undone from the app."
     );
     if (!confirmed) return;
-    if (!(await syncPendingTapsBeforeCriticalAction())) {
-        showToast("Pending counts must sync before reset.", "error", 4500);
+    if (!(await syncQueueBeforeCriticalAction())) {
+        showToast("Saved offline counts must sync before reset.", "error", 4500);
         return;
     }
 
@@ -323,6 +429,7 @@ async function handleResetAll() {
     try {
         const payload = await resetAll();
         updateDashboard(payload);
+        await cacheDashboard();
         historyLoaded = false;
         showToast("Lifetime counter has been reset.", "success");
     } catch (error) {
@@ -353,11 +460,19 @@ function switchView(targetName) {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (targetName === "history" && !historyLoaded) {
-        syncPendingTapsBeforeCriticalAction().finally(loadHistory);
+        flushOfflineQueue().finally(loadHistory);
     }
 }
 
 async function loadHistory() {
+    if (!navigator.onLine || !isAuthenticated()) {
+        elements.historyLoading.hidden = true;
+        elements.historyEmpty.hidden = true;
+        elements.historyList.innerHTML = "";
+        elements.historyErrorText.textContent = "History needs internet and Google sign-in. Your offline counts remain safely queued.";
+        elements.historyError.hidden = false;
+        return;
+    }
     elements.historyLoading.hidden = false;
     elements.historyEmpty.hidden = true;
     elements.historyError.hidden = true;
@@ -560,18 +675,43 @@ function setupSettingsEvents() {
     });
 }
 
-function updateOnlineState() {
+async function updateOnlineState() {
     const online = navigator.onLine;
-    elements.offlineBanner.hidden = online;
+    const summary = hasActiveAppSession() ? await pendingSummary() : { operations: 0, count: 0 };
 
     if (!online) {
-        setConnectionStatus("offline", "Offline — cloud sync paused");
-    } else if (
-        authenticatedAppStarted
-        && document.getElementById("connectionText").dataset.status === "offline"
-    ) {
-        setConnectionStatus("online", "Back online");
-        loadDashboard();
+        elements.offlineBanner.hidden = false;
+        if (elements.offlineBannerText) {
+            elements.offlineBannerText.textContent = summary.count
+                ? `Offline: ${summary.count} count${summary.count === 1 ? "" : "s"} saved on this device.`
+                : "Offline mode is active. New counts will be saved on this device.";
+        }
+        if (elements.reconnectButton) elements.reconnectButton.hidden = true;
+        elements.resetTodayButton.disabled = true;
+        elements.resetAllButton.disabled = true;
+        await refreshPendingStatus();
+        return;
+    }
+
+    elements.resetTodayButton.disabled = !isAuthenticated();
+    elements.resetAllButton.disabled = !isAuthenticated();
+
+    if (hasActiveAppSession() && !isAuthenticated()) {
+        elements.offlineBanner.hidden = false;
+        if (elements.offlineBannerText) {
+            elements.offlineBannerText.textContent = summary.count
+                ? `Back online. Sign in to sync ${summary.count} saved count${summary.count === 1 ? "" : "s"}.`
+                : "Back online. Sign in to restore cloud sync.";
+        }
+        if (elements.reconnectButton) elements.reconnectButton.hidden = false;
+        await refreshPendingStatus();
+        return;
+    }
+
+    elements.offlineBanner.hidden = true;
+    if (elements.reconnectButton) elements.reconnectButton.hidden = true;
+    if (authenticatedAppStarted && isAuthenticated()) {
+        scheduleQueueSync(150);
     }
 }
 
@@ -625,15 +765,16 @@ function bindEvents() {
         button.addEventListener("click", () => switchView(button.dataset.target));
     });
 
-    window.addEventListener("online", () => {
-        updateOnlineState();
-        if (pendingTapCount > 0) scheduleTapSync(150);
+    window.addEventListener("online", async () => {
+        await updateOnlineState();
+        if (isAuthenticated()) scheduleQueueSync(150);
     });
     window.addEventListener("offline", updateOnlineState);
 
     document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden" && pendingTapCount > 0) {
-            flushPendingTaps();
+        if (document.visibilityState === "hidden") {
+            offlineWaitForWrites();
+            if (navigator.onLine && isAuthenticated()) flushOfflineQueue();
         }
     });
 
@@ -645,14 +786,27 @@ function bindEvents() {
 async function startAuthenticatedApp() {
     authenticatedAppStarted = true;
     historyLoaded = false;
+    await updateOnlineState();
+
+    if (authState.offlineMode || !navigator.onLine || !isAuthenticated()) {
+        await loadLocalDashboard();
+        await refreshPendingStatus();
+        return;
+    }
+
     setConnectionStatus("loading", "Signed in — syncing…");
-    updateOnlineState();
-    await loadDashboard();
+    await loadDashboard({ showError: false });
+    scheduleQueueSync(100);
 }
 
-function stopAuthenticatedApp() {
-    authenticatedAppStarted = false;
+function stopAuthenticatedApp(options = {}) {
     historyLoaded = false;
+    if (options.keepOfflineSession && hasActiveAppSession()) {
+        authenticatedAppStarted = true;
+        updateOnlineState();
+        return;
+    }
+    authenticatedAppStarted = false;
     setConnectionStatus("offline", "Signed out");
 }
 
@@ -666,7 +820,7 @@ async function initializeApp() {
     setupInstallPrompt();
     registerServiceWorker();
     bindEvents();
-    updateOnlineState();
+    await updateOnlineState();
 
     await initializeAuthentication({
         onAuthenticated: startAuthenticatedApp,

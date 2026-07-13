@@ -83,15 +83,23 @@ function getDashboard() {
     return api("getDashboard");
 }
 
-function addCount(num = 1) {
-    return api("addCount", { num });
+function addCount(num = 1, operationId = "", metadata = {}) {
+    return api("addCount", {
+        num,
+        operationId,
+        batchId: operationId,
+        clientCreatedAt: metadata.clientCreatedAt || "",
+        localDate: metadata.localDate || "",
+        mantra: metadata.mantra || "",
+    });
 }
 
-function saveMantra(mantra) {
+function saveMantra(mantra, operationId = "") {
     return api("saveMantra", {
         mantra,
         selectedMantra: mantra,
         value: mantra,
+        operationId,
     });
 }
 

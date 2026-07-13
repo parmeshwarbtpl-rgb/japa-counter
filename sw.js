@@ -1,16 +1,17 @@
-const CACHE_NAME = "naam-jaap-counter-v2-5-0-clock-reminder";
+const CACHE_NAME = "naam-jaap-counter-v2-6-0-offline-safe";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=250",
-    "./config.js?v=250",
-    "./api.js?v=250",
-    "./auth.js?v=250",
-    "./settings.js?v=250",
-    "./history.js?v=250",
-    "./ui.js?v=250",
-    "./reminder.js?v=250",
-    "./app.js?v=250",
+    "./style.css?v=260",
+    "./config.js?v=260",
+    "./offline.js?v=260",
+    "./api.js?v=260",
+    "./auth.js?v=260",
+    "./settings.js?v=260",
+    "./history.js?v=260",
+    "./ui.js?v=260",
+    "./reminder.js?v=260",
+    "./app.js?v=260",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"

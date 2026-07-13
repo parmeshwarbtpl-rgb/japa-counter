@@ -1,4 +1,4 @@
-// Google Identity Services authentication and pseudonymous device identity.
+// Google Identity Services authentication and privacy-conscious offline access.
 
 const AUTH_SESSION_KEY = "naam-jaap-auth-session-v1";
 const DEVICE_ID_KEY = "naam-jaap-device-id-v1";
@@ -7,6 +7,7 @@ let authState = {
     idToken: "",
     user: null,
     deviceKey: "",
+    offlineMode: false,
     onAuthenticated: null,
     onSignedOut: null,
 };
@@ -19,10 +20,7 @@ function isGoogleClientConfigured() {
 }
 
 function createRandomDeviceId() {
-    if (window.crypto?.randomUUID) {
-        return window.crypto.randomUUID();
-    }
-
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
     const bytes = new Uint8Array(16);
     window.crypto?.getRandomValues?.(bytes);
     return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("")
@@ -55,10 +53,7 @@ function detectBrowser() {
 }
 
 function getDeviceContext() {
-    const coarsePlatform = navigator.userAgentData?.platform
-        || navigator.platform
-        || "Unknown";
-
+    const coarsePlatform = navigator.userAgentData?.platform || navigator.platform || "Unknown";
     return {
         deviceId: getOrCreateDeviceId(),
         deviceType: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "")
@@ -73,7 +68,6 @@ function getDeviceContext() {
     };
 }
 
-
 function isLikelyEmbeddedBrowser() {
     const ua = navigator.userAgent || "";
     return /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|\bwv\b|WebView/i.test(ua);
@@ -84,7 +78,11 @@ function getAuthCredential() {
 }
 
 function isAuthenticated() {
-    return Boolean(authState.idToken && authState.user);
+    return Boolean(authState.idToken && authState.user && !authState.offlineMode);
+}
+
+function hasActiveAppSession() {
+    return Boolean(authState.user);
 }
 
 function readStoredAuthSession() {
@@ -109,10 +107,21 @@ function writeAuthSession() {
     }
 }
 
+function clearLiveAuthSession() {
+    authState.idToken = "";
+    authState.offlineMode = Boolean(authState.user);
+    try {
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
+    } catch (_error) {
+        // Ignore storage restrictions.
+    }
+}
+
 function clearAuthSession() {
     authState.idToken = "";
     authState.user = null;
     authState.deviceKey = "";
+    authState.offlineMode = false;
     try {
         sessionStorage.removeItem(AUTH_SESSION_KEY);
     } catch (_error) {
@@ -170,6 +179,13 @@ function showLoginGate() {
     if (authGate) authGate.hidden = false;
 }
 
+async function updateContinueOfflineButton() {
+    const button = document.getElementById("continueOfflineBtn");
+    if (!button) return;
+    const profile = await offlineGetValidProfile().catch(() => null);
+    button.hidden = !profile;
+}
+
 async function acceptVerifiedSession(idToken) {
     setLoginBusy(true);
     setAuthMessage("Verifying your Google account securely…", "info");
@@ -185,7 +201,9 @@ async function acceptVerifiedSession(idToken) {
         authState.idToken = idToken;
         authState.user = user;
         authState.deviceKey = String(result?.deviceKey || "");
+        authState.offlineMode = false;
         writeAuthSession();
+        await offlineSaveVerifiedProfile(user, authState.deviceKey);
         showAuthenticatedApp();
         setAuthMessage("Signed in.", "success");
 
@@ -195,6 +213,7 @@ async function acceptVerifiedSession(idToken) {
     } catch (error) {
         clearAuthSession();
         showLoginGate();
+        await updateContinueOfflineButton();
         setAuthMessage(error.message || "Google sign-in could not be verified.", "error");
         throw error;
     } finally {
@@ -224,7 +243,6 @@ function waitForGoogleIdentity(timeoutMs = 12000) {
                 resolve(window.google.accounts.id);
                 return;
             }
-
             if (Date.now() - startedAt >= timeoutMs) {
                 window.clearInterval(timer);
                 reject(new Error("Google Sign-In could not be loaded. Check your internet connection."));
@@ -234,6 +252,12 @@ function waitForGoogleIdentity(timeoutMs = 12000) {
 }
 
 async function renderGoogleSignIn() {
+    if (!navigator.onLine) {
+        setAuthMessage("You are offline. Use the verified offline profile on this device.", "info");
+        await updateContinueOfflineButton();
+        return;
+    }
+
     if (!isGoogleClientConfigured()) {
         setAuthMessage(
             "Setup required: add the Google Web Client ID in config.js before publishing this version.",
@@ -269,6 +293,7 @@ async function renderGoogleSignIn() {
             width: Math.min(340, Math.max(240, window.innerWidth - 72)),
             locale: "en",
         });
+        await updateContinueOfflineButton();
         setAuthMessage(
             isLikelyEmbeddedBrowser()
                 ? "For Google sign-in, open this page directly in Chrome or Safari, not inside WhatsApp or another in-app browser."
@@ -277,12 +302,13 @@ async function renderGoogleSignIn() {
         );
     } catch (error) {
         setAuthMessage(error.message, "error");
+        await updateContinueOfflineButton();
     }
 }
 
 async function restoreStoredAuthentication() {
     const stored = readStoredAuthSession();
-    if (!stored?.idToken) return false;
+    if (!stored?.idToken || !navigator.onLine) return false;
 
     try {
         await acceptVerifiedSession(stored.idToken);
@@ -292,29 +318,49 @@ async function restoreStoredAuthentication() {
     }
 }
 
+async function restoreOfflineAuthentication() {
+    const profile = await offlineGetValidProfile().catch(() => null);
+    if (!profile) return false;
+
+    authState.idToken = "";
+    authState.user = profile.user;
+    authState.deviceKey = String(profile.deviceKey || "");
+    authState.offlineMode = true;
+    showAuthenticatedApp();
+    setAuthMessage("Offline access active.", "success");
+
+    if (typeof authState.onAuthenticated === "function") {
+        await authState.onAuthenticated({ ...authState });
+    }
+    return true;
+}
+
+async function beginOnlineSignIn() {
+    showLoginGate();
+    await updateContinueOfflineButton();
+    await renderGoogleSignIn();
+}
+
 async function signOutUser() {
     clearAuthSession();
-    if (window.google?.accounts?.id) {
-        window.google.accounts.id.disableAutoSelect();
-    }
+    await offlineClearVerifiedProfile().catch(() => undefined);
+    if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
     showLoginGate();
     setAuthMessage("You have been signed out safely.", "success");
     await renderGoogleSignIn();
 
-    if (typeof authState.onSignedOut === "function") {
-        authState.onSignedOut();
-    }
+    if (typeof authState.onSignedOut === "function") authState.onSignedOut();
 }
 
 function handleAuthExpired(message = "Your session expired. Please sign in again.") {
-    clearAuthSession();
-    showLoginGate();
+    clearLiveAuthSession();
     setAuthMessage(message, "error");
-    renderGoogleSignIn();
 
     if (typeof authState.onSignedOut === "function") {
-        authState.onSignedOut();
+        authState.onSignedOut({ keepOfflineSession: true });
     }
+
+    if (navigator.onLine) beginOnlineSignIn();
 }
 
 async function initializeAuthentication({ onAuthenticated, onSignedOut } = {}) {
@@ -325,8 +371,20 @@ async function initializeAuthentication({ onAuthenticated, onSignedOut } = {}) {
     document.getElementById("accountButton")?.addEventListener("click", () => {
         if (typeof switchView === "function") switchView("settings");
     });
+    document.getElementById("continueOfflineBtn")?.addEventListener("click", restoreOfflineAuthentication);
+    document.getElementById("reconnectBtn")?.addEventListener("click", beginOnlineSignIn);
 
     showLoginGate();
+
+    if (!navigator.onLine) {
+        const restoredOffline = await restoreOfflineAuthentication();
+        if (!restoredOffline) {
+            setAuthMessage("Connect to the internet and sign in once before offline use is available.", "error");
+        }
+        return;
+    }
+
     await renderGoogleSignIn();
-    await restoreStoredAuthentication();
+    const restoredLive = await restoreStoredAuthentication();
+    if (!restoredLive) await updateContinueOfflineButton();
 }
