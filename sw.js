@@ -1,16 +1,16 @@
-const CACHE_NAME = "naam-jaap-counter-v2-1";
+const CACHE_NAME = "naam-jaap-counter-v2-2-flat";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./css/style.css",
-    "./js/api.js",
-    "./js/settings.js",
-    "./js/history.js",
-    "./js/ui.js",
-    "./js/app.js",
+    "./style.css?v=220",
+    "./api.js?v=220",
+    "./settings.js?v=220",
+    "./history.js?v=220",
+    "./ui.js?v=220",
+    "./app.js?v=220",
     "./manifest.json",
-    "./icons/icon-192.png",
-    "./icons/icon-512.png"
+    "./icon-192.png",
+    "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
