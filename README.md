@@ -87,3 +87,12 @@ Deploy the secure Apps Script backend **before** replacing the live GitHub Pages
 ## Mobile Google Sign-In
 
 Version 2.3.2 enables FedCM for the Google sign-in button on supported Chrome versions. On Android and iPhone, open the GitHub Pages URL directly in Chrome or Safari. Google Identity Services is not supported inside WhatsApp, Facebook, Instagram, or other embedded webviews.
+
+
+## v2.4 Fast Tap Sync
+
+- Counter updates instantly on tap (optimistic UI).
+- Rapid taps are grouped into one Google Sheets request after a short pause.
+- The button stays responsive while cloud sync runs in the background.
+- Pending counts automatically retry when connectivity improves.
+- Mantra changes and resets wait for pending counts to sync, preserving action order.

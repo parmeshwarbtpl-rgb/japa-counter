@@ -1,15 +1,15 @@
-const CACHE_NAME = "naam-jaap-counter-v2-3-2-mobile-login";
+const CACHE_NAME = "naam-jaap-counter-v2-4-0-fast-tap-sync";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=232",
-    "./config.js?v=232",
-    "./api.js?v=232",
-    "./auth.js?v=232",
-    "./settings.js?v=232",
-    "./history.js?v=232",
-    "./ui.js?v=232",
-    "./app.js?v=232",
+    "./style.css?v=240",
+    "./config.js?v=240",
+    "./api.js?v=240",
+    "./auth.js?v=240",
+    "./settings.js?v=240",
+    "./history.js?v=240",
+    "./ui.js?v=240",
+    "./app.js?v=240",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"

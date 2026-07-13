@@ -46,6 +46,14 @@ let historyLoaded = false;
 let deferredInstallPrompt = null;
 let authenticatedAppStarted = false;
 
+// Mobile-friendly optimistic counter sync. Taps update the screen immediately,
+// then a short burst is sent to Google Sheets as one batched request.
+const TAP_SYNC_DELAY_MS = 450;
+const TAP_RETRY_DELAY_MS = 3000;
+let pendingTapCount = 0;
+let tapSyncTimer = null;
+let tapSyncPromise = null;
+
 function unwrapDashboardPayload(payload) {
     if (!payload || typeof payload !== "object") return {};
     if (Array.isArray(payload)) return {};
@@ -130,31 +138,120 @@ async function loadDashboard(options = {}) {
     }
 }
 
-async function handleTap() {
-    setButtonBusy(elements.tapButton, true, "Saving +1…");
+function scheduleTapSync(delayMs = TAP_SYNC_DELAY_MS) {
+    window.clearTimeout(tapSyncTimer);
+    tapSyncTimer = window.setTimeout(() => {
+        flushPendingTaps();
+    }, delayMs);
+}
 
-    try {
-        const payload = await addCount(1);
-        updateDashboard(payload, { animate: true });
-        setConnectionStatus("online", "Synced with Google Sheets");
+function mergeServerDashboardWithPending(payload) {
+    const data = unwrapDashboardPayload(payload);
+    const serverToday = Number(data.today ?? data.todayCount ?? data.daily ?? data.count);
+    const serverLifetime = Number(data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total);
+    const serverMantra = String(data.mantra ?? data.selectedMantra ?? dashboardState.mantra ?? "").trim();
 
-        if (appSettings.voiceEnabled && appSettings.autoSpeakEnabled) {
-            speakMantra(dashboardState.mantra);
+    return {
+        today: Number.isFinite(serverToday)
+            ? serverToday + pendingTapCount
+            : dashboardState.today,
+        lifetime: Number.isFinite(serverLifetime)
+            ? serverLifetime + pendingTapCount
+            : dashboardState.lifetime,
+        mantra: serverMantra || dashboardState.mantra,
+    };
+}
+
+function flushPendingTaps() {
+    window.clearTimeout(tapSyncTimer);
+    tapSyncTimer = null;
+
+    if (tapSyncPromise) return tapSyncPromise;
+    if (pendingTapCount <= 0 || !isAuthenticated()) return Promise.resolve(true);
+
+    const batchSize = pendingTapCount;
+    pendingTapCount = 0;
+    setConnectionStatus(
+        "loading",
+        batchSize > 1 ? `Syncing ${batchSize} counts…` : "Syncing count…"
+    );
+
+    tapSyncPromise = (async () => {
+        try {
+            const payload = await addCount(batchSize);
+            updateDashboard(mergeServerDashboardWithPending(payload));
+            historyLoaded = false;
+
+            if (pendingTapCount > 0) {
+                setConnectionStatus("loading", `Syncing ${pendingTapCount} pending…`);
+            } else {
+                setConnectionStatus("online", "Synced with Google Sheets");
+            }
+            return true;
+        } catch (error) {
+            // Keep the visible count and put the unsynced batch back in the queue.
+            pendingTapCount += batchSize;
+            console.error("Counter sync failed:", error);
+            setConnectionStatus(
+                "error",
+                `${pendingTapCount} count${pendingTapCount === 1 ? "" : "s"} waiting to sync`
+            );
+            showToast(
+                "Count is visible. Cloud sync will retry automatically.",
+                "error",
+                4500
+            );
+            return false;
+        } finally {
+            tapSyncPromise = null;
+            if (pendingTapCount > 0) {
+                scheduleTapSync(navigator.onLine ? TAP_RETRY_DELAY_MS : TAP_RETRY_DELAY_MS * 2);
+            }
         }
+    })();
 
-        historyLoaded = false;
-    } catch (error) {
-        console.error("Counter update failed:", error);
-        setConnectionStatus("error", "Count was not saved");
-        showToast(error.message || "Counter update failed.", "error", 5000);
-    } finally {
-        setButtonBusy(elements.tapButton, false);
+    return tapSyncPromise;
+}
+
+async function syncPendingTapsBeforeCriticalAction() {
+    window.clearTimeout(tapSyncTimer);
+    tapSyncTimer = null;
+
+    if (tapSyncPromise) await tapSyncPromise;
+    if (pendingTapCount > 0) return flushPendingTaps();
+    return true;
+}
+
+function handleTap() {
+    // Optimistic UI: the user sees the count instantly, even on a slow mobile network.
+    pendingTapCount += 1;
+    dashboardState = {
+        ...dashboardState,
+        today: dashboardState.today + 1,
+        lifetime: dashboardState.lifetime + 1,
+    };
+    updateDashboard(dashboardState, { animate: true });
+    setConnectionStatus("loading", `${pendingTapCount} pending sync…`);
+    historyLoaded = false;
+
+    if (navigator.vibrate) navigator.vibrate(8);
+
+    if (appSettings.voiceEnabled && appSettings.autoSpeakEnabled) {
+        speakMantra(dashboardState.mantra);
     }
+
+    scheduleTapSync();
 }
 
 async function handleMantraChange() {
     const nextMantra = elements.mantraSelect.value;
     const previousMantra = dashboardState.mantra;
+
+    if (!(await syncPendingTapsBeforeCriticalAction())) {
+        elements.mantraSelect.value = previousMantra;
+        showToast("Please wait for pending counts to sync before changing mantra.", "error", 4500);
+        return;
+    }
 
     // Update immediately so the selected mantra never appears to jump back
     // when the backend returns only { success, message }.
@@ -193,6 +290,10 @@ async function handleMantraChange() {
 
 async function handleResetToday() {
     if (!window.confirm("Reset today's counter to zero?")) return;
+    if (!(await syncPendingTapsBeforeCriticalAction())) {
+        showToast("Pending counts must sync before reset.", "error", 4500);
+        return;
+    }
 
     setButtonBusy(elements.resetTodayButton, true, "Resetting…");
     try {
@@ -213,6 +314,10 @@ async function handleResetAll() {
         "Reset the lifetime counter? This is a major action and cannot be undone from the app."
     );
     if (!confirmed) return;
+    if (!(await syncPendingTapsBeforeCriticalAction())) {
+        showToast("Pending counts must sync before reset.", "error", 4500);
+        return;
+    }
 
     setButtonBusy(elements.resetAllButton, true, "Resetting…");
     try {
@@ -248,7 +353,7 @@ function switchView(targetName) {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (targetName === "history" && !historyLoaded) {
-        loadHistory();
+        syncPendingTapsBeforeCriticalAction().finally(loadHistory);
     }
 }
 
@@ -520,8 +625,17 @@ function bindEvents() {
         button.addEventListener("click", () => switchView(button.dataset.target));
     });
 
-    window.addEventListener("online", updateOnlineState);
+    window.addEventListener("online", () => {
+        updateOnlineState();
+        if (pendingTapCount > 0) scheduleTapSync(150);
+    });
     window.addEventListener("offline", updateOnlineState);
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden" && pendingTapCount > 0) {
+            flushPendingTaps();
+        }
+    });
 
     if ("speechSynthesis" in window) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
