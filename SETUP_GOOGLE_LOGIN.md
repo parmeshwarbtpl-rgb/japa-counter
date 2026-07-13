@@ -51,7 +51,7 @@ Copy the Client ID. It ends with:
 Open `config.js` and replace:
 
 ```javascript
-GOOGLE_CLIENT_ID: "PASTE_YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID: "984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com"
 ```
 
 with your real Web Client ID.
@@ -98,7 +98,7 @@ Keep the files containing those functions.
 Open `99_Auth_Setup.gs` and paste the same Web Client ID into:
 
 ```javascript
-var googleClientId = 'PASTE_YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+var googleClientId = '984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com';
 ```
 
 Run this function once:

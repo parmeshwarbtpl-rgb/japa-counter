@@ -74,3 +74,11 @@ The History screen reads the authenticated user's new audit history from `User_A
 ## Verification scope
 
 This implementation is designed for a small, low-volume Apps Script application. It uses Google's `tokeninfo` endpoint because Apps Script cannot directly use the usual server client libraries. For a high-traffic public production service, use Cloud Run or Cloud Functions with an official Google Auth library.
+
+## Google Login configuration status
+
+This package is configured with the Web OAuth Client ID:
+
+`984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com`
+
+Deploy the secure Apps Script backend **before** replacing the live GitHub Pages frontend. Follow `DEPLOY_ORDER.txt`.

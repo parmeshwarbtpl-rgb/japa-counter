@@ -1,0 +1,37 @@
+NAAM JAAP COUNTER — GOOGLE LOGIN DEPLOYMENT ORDER
+
+Configured Web OAuth Client ID:
+984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com
+
+IMPORTANT: Deploy the backend first. Uploading the frontend before the secure backend is deployed will make the live app show login/API errors.
+
+1. GOOGLE APPS SCRIPT
+   - Replace existing 01_Server.gs contents with apps-script/01_Server_SECURE_REPLACEMENT.gs.
+   - Add apps-script/06_Auth.gs.
+   - Add apps-script/07_UserActivity.gs.
+   - Add apps-script/99_Auth_Setup.gs.
+   - Run setupSecureAuthentication() once and approve permissions.
+   - Deploy > Manage deployments > Edit > New version > Deploy.
+   - Keep: Execute as Me; Who has access: Anyone.
+
+2. TEST BACKEND
+   - Open the /exec URL. It should return JSON saying authRequired is true and authenticated POST requests must be used.
+
+3. GITHUB PAGES FRONTEND
+   - Upload the root frontend files to the repository root.
+   - Do not upload the apps-script folder publicly unless you intentionally want to publish backend source.
+   - Commit changes and wait for GitHub Pages deployment.
+
+4. REFRESH / REINSTALL
+   - Desktop: Ctrl + Shift + R.
+   - Mobile: clear site data or uninstall the old PWA and install again.
+
+5. VERIFY
+   - Sign in with Google.
+   - Check Users, Devices, and User_Activity sheets.
+   - Test +1, mantra change, reset, and History.
+
+Security notes:
+- The OAuth Client ID is public and safe to include in frontend code.
+- Never upload or share a Google OAuth Client Secret.
+- The app stores no Google password and does not store raw ID tokens in Sheets.
