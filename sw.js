@@ -1,4 +1,4 @@
-const CACHE_NAME = "naam-jaap-counter-v2-6-0-offline-safe";
+const CACHE_NAME = "naam-jaap-counter-v2-6-1-tap-animation";
 const APP_SHELL = [
     "./",
     "./index.html",
