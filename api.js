@@ -72,7 +72,11 @@ function addCount(num = 1) {
 }
 
 function saveMantra(mantra) {
-    return api("saveMantra", { mantra });
+    return api("saveMantra", {
+        mantra,
+        selectedMantra: mantra,
+        value: mantra,
+    });
 }
 
 function resetToday() {

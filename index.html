@@ -11,9 +11,9 @@
     <title>Naam Jaap Counter v2.x</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=220" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=220">
-    <link rel="stylesheet" href="style.css?v=220">
+    <link rel="icon" href="icon-192.png?v=221" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=221">
+    <link rel="stylesheet" href="style.css?v=221">
 </head>
 <body>
     <header class="app-header">
@@ -35,6 +35,17 @@
             <section class="card counter-card">
                 <p class="eyebrow">Selected Mantra</p>
                 <h3 id="mantra" class="mantra-text">ॐ नमः शिवाय</h3>
+
+                <div class="inline-mantra-picker">
+                    <label for="mantraSelect">Change Mantra</label>
+                    <select id="mantraSelect" aria-label="Choose mantra">
+                        <option value="ॐ नमः शिवाय">ॐ नमः शिवाय</option>
+                        <option value="ॐ गं गणपतये नमः">ॐ गं गणपतये नमः</option>
+                        <option value="श्री राम जय राम जय जय राम">श्री राम जय राम जय जय राम</option>
+                        <option value="ॐ नमो भगवते वासुदेवाय">ॐ नमो भगवते वासुदेवाय</option>
+                        <option value="हरे कृष्ण हरे कृष्ण">हरे कृष्ण हरे कृष्ण</option>
+                    </select>
+                </div>
 
                 <div id="counter" class="counter" aria-live="polite">0</div>
 
@@ -66,17 +77,6 @@
                 <div class="progress-track" role="progressbar" aria-label="Daily target progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <div id="targetProgress" class="progress-fill"></div>
                 </div>
-            </section>
-
-            <section class="card form-card">
-                <label for="mantraSelect">Select Mantra</label>
-                <select id="mantraSelect">
-                    <option value="ॐ नमः शिवाय">ॐ नमः शिवाय</option>
-                    <option value="ॐ गं गणपतये नमः">ॐ गं गणपतये नमः</option>
-                    <option value="श्री राम जय राम जय जय राम">श्री राम जय राम जय जय राम</option>
-                    <option value="ॐ नमो भगवते वासुदेवाय">ॐ नमो भगवते वासुदेवाय</option>
-                    <option value="हरे कृष्ण हरे कृष्ण">हरे कृष्ण हरे कृष्ण</option>
-                </select>
             </section>
 
             <section class="card action-buttons" aria-label="Reset counter actions">
@@ -209,10 +209,10 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="api.js?v=220"></script>
-    <script src="settings.js?v=220"></script>
-    <script src="history.js?v=220"></script>
-    <script src="ui.js?v=220"></script>
-    <script src="app.js?v=220"></script>
+    <script src="api.js?v=221"></script>
+    <script src="settings.js?v=221"></script>
+    <script src="history.js?v=221"></script>
+    <script src="ui.js?v=221"></script>
+    <script src="app.js?v=221"></script>
 </body>
 </html>

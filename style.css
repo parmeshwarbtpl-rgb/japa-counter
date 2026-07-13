@@ -162,6 +162,27 @@ input:focus-visible {
     line-height: 1.35;
 }
 
+
+.inline-mantra-picker {
+    width: min(100%, 410px);
+    margin: 14px auto 0;
+    text-align: left;
+}
+
+.inline-mantra-picker label {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.inline-mantra-picker select {
+    margin-top: 7px;
+    border-color: #ffc38f;
+    background: #fffaf6;
+    cursor: pointer;
+}
+
 .counter {
     margin: 20px 0;
     color: #30323a;

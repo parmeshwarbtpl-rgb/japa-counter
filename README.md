@@ -131,6 +131,10 @@ Voice and daily target preferences are stored locally in the browser. Counter an
 This package is currently configured with the supplied Google Apps Script Web App `/exec` endpoint in `js/api.js`.
 
 
-## Flat GitHub Upload Package
+## v2.2.1 Mantra selection fix
 
-This build keeps every deployable file in the repository root so GitHub web upload does not break css/js/icons paths.
+- Moved the mantra selector into the main counter card.
+- Keeps the selected mantra visible when the backend returns a partial success response.
+- Preserves current counters during mantra-only updates.
+- Added compatible request parameter aliases.
+- Bumped the PWA cache so browsers receive the corrected files.

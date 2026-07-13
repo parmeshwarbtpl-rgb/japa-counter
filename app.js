@@ -57,8 +57,12 @@ function unwrapDashboardPayload(payload) {
 
 function normalizeDashboard(payload) {
     const data = unwrapDashboardPayload(payload);
-    const today = Number(data.today ?? data.todayCount ?? data.daily ?? data.count ?? 0);
-    const lifetime = Number(data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? 0);
+    const today = Number(
+        data.today ?? data.todayCount ?? data.daily ?? data.count ?? dashboardState.today ?? 0
+    );
+    const lifetime = Number(
+        data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? dashboardState.lifetime ?? 0
+    );
     const mantra = String(data.mantra ?? data.selectedMantra ?? dashboardState.mantra ?? "").trim();
 
     return {
@@ -149,19 +153,37 @@ async function handleTap() {
 
 async function handleMantraChange() {
     const nextMantra = elements.mantraSelect.value;
+    const previousMantra = dashboardState.mantra;
+
+    // Update immediately so the selected mantra never appears to jump back
+    // when the backend returns only { success, message }.
+    dashboardState.mantra = nextMantra;
+    elements.mantra.textContent = nextMantra;
+    elements.mantraSelect.value = nextMantra;
     elements.mantraSelect.disabled = true;
 
     try {
         const payload = await saveMantra(nextMantra);
-        updateDashboard(payload);
+        const data = unwrapDashboardPayload(payload);
+
+        // Preserve the chosen mantra and existing counters for partial API responses.
+        updateDashboard({
+            ...data,
+            today: data.today ?? data.todayCount ?? data.daily ?? data.count ?? dashboardState.today,
+            lifetime: data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? dashboardState.lifetime,
+            mantra: nextMantra,
+        });
+
         showToast("Mantra updated.", "success");
 
         if (appSettings.voiceEnabled) {
-            speakMantra(dashboardState.mantra);
+            speakMantra(nextMantra);
         }
     } catch (error) {
         console.error("Mantra save failed:", error);
-        elements.mantraSelect.value = dashboardState.mantra;
+        dashboardState.mantra = previousMantra;
+        elements.mantra.textContent = previousMantra;
+        elements.mantraSelect.value = previousMantra;
         showToast(error.message || "Mantra could not be saved.", "error", 5000);
     } finally {
         elements.mantraSelect.disabled = false;

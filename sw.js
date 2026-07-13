@@ -1,13 +1,13 @@
-const CACHE_NAME = "naam-jaap-counter-v2-2-flat";
+const CACHE_NAME = "naam-jaap-counter-v2-2-1-mantra-fix";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=220",
-    "./api.js?v=220",
-    "./settings.js?v=220",
-    "./history.js?v=220",
-    "./ui.js?v=220",
-    "./app.js?v=220",
+    "./style.css?v=221",
+    "./api.js?v=221",
+    "./settings.js?v=221",
+    "./history.js?v=221",
+    "./ui.js?v=221",
+    "./app.js?v=221",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
