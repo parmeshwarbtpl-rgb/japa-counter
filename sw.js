@@ -1,13 +1,15 @@
-const CACHE_NAME = "naam-jaap-counter-v2-2-1-mantra-fix";
+const CACHE_NAME = "naam-jaap-counter-v2-3-0-auth-safe";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=221",
-    "./api.js?v=221",
-    "./settings.js?v=221",
-    "./history.js?v=221",
-    "./ui.js?v=221",
-    "./app.js?v=221",
+    "./style.css?v=230",
+    "./config.js?v=230",
+    "./api.js?v=230",
+    "./auth.js?v=230",
+    "./settings.js?v=230",
+    "./history.js?v=230",
+    "./ui.js?v=230",
+    "./app.js?v=230",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
@@ -36,7 +38,8 @@ self.addEventListener("fetch", event => {
 
     if (event.request.method !== "GET") return;
 
-    if (requestUrl.hostname.includes("script.google.com") || requestUrl.hostname.includes("script.googleusercontent.com")) {
+    // Authentication, Google APIs, and Apps Script always use the network.
+    if (requestUrl.origin !== self.location.origin) {
         event.respondWith(fetch(event.request));
         return;
     }
@@ -46,7 +49,7 @@ self.addEventListener("fetch", event => {
             if (cachedResponse) return cachedResponse;
 
             return fetch(event.request).then(networkResponse => {
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === "opaque") {
+                if (!networkResponse || networkResponse.status !== 200) {
                     return networkResponse;
                 }
 

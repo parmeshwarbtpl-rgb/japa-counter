@@ -44,6 +44,7 @@ let dashboardState = {
 };
 let historyLoaded = false;
 let deferredInstallPrompt = null;
+let authenticatedAppStarted = false;
 
 function unwrapDashboardPayload(payload) {
     if (!payload || typeof payload !== "object") return {};
@@ -292,7 +293,13 @@ function renderHistory(entries) {
         const badge = document.createElement("div");
         badge.className = "history-badge";
         badge.setAttribute("aria-hidden", "true");
-        badge.textContent = "+";
+        const actionLabels = {
+            ADD_COUNT: "+",
+            MANTRA_CHANGE: "ॐ",
+            RESET_TODAY: "↺",
+            RESET_ALL: "!",
+        };
+        badge.textContent = actionLabels[entry.action] || "+";
 
         const main = document.createElement("div");
         main.className = "history-main";
@@ -303,7 +310,13 @@ function renderHistory(entries) {
 
         const meta = document.createElement("div");
         meta.className = "history-meta";
-        meta.textContent = [entry.date, entry.time].filter(Boolean).join(" • ") || "Saved activity";
+        const readableAction = String(entry.action || "ADD_COUNT")
+            .toLowerCase()
+            .replaceAll("_", " ")
+            .replace(/\b\w/g, letter => letter.toUpperCase());
+        meta.textContent = [entry.date, entry.time, readableAction, entry.deviceKey]
+            .filter(Boolean)
+            .join(" • ") || "Saved activity";
 
         const count = document.createElement("div");
         count.className = "history-count";
@@ -448,7 +461,10 @@ function updateOnlineState() {
 
     if (!online) {
         setConnectionStatus("offline", "Offline — cloud sync paused");
-    } else if (document.getElementById("connectionText").dataset.status === "offline") {
+    } else if (
+        authenticatedAppStarted
+        && document.getElementById("connectionText").dataset.status === "offline"
+    ) {
         setConnectionStatus("online", "Back online");
         loadDashboard();
     }
@@ -512,7 +528,21 @@ function bindEvents() {
     }
 }
 
-function initializeApp() {
+async function startAuthenticatedApp() {
+    authenticatedAppStarted = true;
+    historyLoaded = false;
+    setConnectionStatus("loading", "Signed in — syncing…");
+    updateOnlineState();
+    await loadDashboard();
+}
+
+function stopAuthenticatedApp() {
+    authenticatedAppStarted = false;
+    historyLoaded = false;
+    setConnectionStatus("offline", "Signed out");
+}
+
+async function initializeApp() {
     renderSettings();
     loadVoices();
     setupSettingsEvents();
@@ -520,7 +550,14 @@ function initializeApp() {
     registerServiceWorker();
     bindEvents();
     updateOnlineState();
-    loadDashboard();
+
+    await initializeAuthentication({
+        onAuthenticated: startAuthenticatedApp,
+        onSignedOut: stopAuthenticatedApp,
+    });
 }
 
-initializeApp();
+initializeApp().catch(error => {
+    console.error("Application initialization failed:", error);
+    setAuthMessage(error.message || "The application could not start.", "error");
+});

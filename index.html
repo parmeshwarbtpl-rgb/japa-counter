@@ -11,17 +11,43 @@
     <title>Naam Jaap Counter v2.x</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=221" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=221">
-    <link rel="stylesheet" href="style.css?v=221">
+    <link rel="icon" href="icon-192.png?v=230" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=230">
+    <link rel="stylesheet" href="style.css?v=230">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <header class="app-header">
-        <div class="brand-mark" aria-hidden="true">ॐ</div>
-        <div>
-            <h1>Naam Jaap Counter</h1>
-            <p id="connectionText" class="connection-text">Connecting…</p>
+    <section id="authGate" class="auth-gate" aria-labelledby="authTitle">
+        <div class="auth-card">
+            <div class="auth-mark" aria-hidden="true">ॐ</div>
+            <p class="eyebrow">Secure Sync</p>
+            <h1 id="authTitle">Naam Jaap Counter</h1>
+            <p class="auth-intro">Sign in with Google to keep activity linked to a verified account and a pseudonymous device key.</p>
+            <div id="googleSignInButton" class="google-signin-button"></div>
+            <div id="authLoading" class="auth-loading" hidden>
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Verifying…</span>
+            </div>
+            <p id="authMessage" class="auth-message" data-type="info">Loading secure sign-in…</p>
+            <div class="privacy-note">
+                <strong>Privacy:</strong> The app stores your verified Google account ID, name, email, login times, a hashed device key, and jaap activity. It never stores your Google password or client secret.
+            </div>
         </div>
+    </section>
+
+    <div id="appRoot" hidden>
+    <header class="app-header">
+        <div class="header-brand">
+            <div class="brand-mark" aria-hidden="true">ॐ</div>
+            <div>
+                <h1>Naam Jaap Counter</h1>
+                <p id="connectionText" class="connection-text">Signed in — connecting…</p>
+            </div>
+        </div>
+        <button id="accountButton" class="account-chip" type="button" aria-label="Open account settings">
+            <span class="account-initial" data-user-initial>G</span>
+            <span class="account-chip-name" data-user-name>Google User</span>
+        </button>
     </header>
 
     <div id="offlineBanner" class="offline-banner" hidden>
@@ -174,6 +200,20 @@
                 <button id="testVoiceBtn" class="secondary-btn full-width" type="button">Test Selected Voice</button>
             </section>
 
+            <section class="card account-card">
+                <div class="account-profile">
+                    <span class="account-avatar" data-user-initial>G</span>
+                    <div>
+                        <p class="eyebrow">Signed-in Account</p>
+                        <h3 data-user-name>Google User</h3>
+                        <p data-user-email></p>
+                        <p id="accountDeviceKey" class="device-key">Registered device</p>
+                    </div>
+                </div>
+                <p class="field-help">The device key is a server-side hash. The raw browser device ID is not stored in Google Sheets.</p>
+                <button id="signOutBtn" class="secondary-btn full-width" type="button">Sign Out</button>
+            </section>
+
             <section class="card install-card">
                 <div>
                     <p class="eyebrow">Progressive Web App</p>
@@ -206,13 +246,16 @@
             <span>Settings</span>
         </button>
     </nav>
+    </div>
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="api.js?v=221"></script>
-    <script src="settings.js?v=221"></script>
-    <script src="history.js?v=221"></script>
-    <script src="ui.js?v=221"></script>
-    <script src="app.js?v=221"></script>
+    <script src="config.js?v=230"></script>
+    <script src="api.js?v=230"></script>
+    <script src="auth.js?v=230"></script>
+    <script src="settings.js?v=230"></script>
+    <script src="history.js?v=230"></script>
+    <script src="ui.js?v=230"></script>
+    <script src="app.js?v=230"></script>
 </body>
 </html>

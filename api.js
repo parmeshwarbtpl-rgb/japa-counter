@@ -1,28 +1,36 @@
-// Naam Jaap Counter API v2.x
+// Authenticated Naam Jaap Counter API v2.3.
+// ID tokens are sent in a POST body, never in URL query parameters.
 
-const API_URL =
-    "https://script.google.com/macros/s/AKfycbzfUW7ADdZfzE82PEsE5czOLdGuTlY4S1SEb_698IX-4ti1-l4aWXdLBUh1nMOc2L4s/exec";
+const API_URL = window.APP_CONFIG?.API_URL || "";
+const API_TIMEOUT_MS = 25000;
 
-const API_TIMEOUT_MS = 20000;
+async function api(action, params = {}, options = {}) {
+    const idToken = options.idToken || getAuthCredential();
 
-async function api(action, params = {}) {
-    const url = new URL(API_URL);
-    url.searchParams.set("action", action);
-
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-            url.searchParams.set(key, String(value));
-        }
-    });
+    if (!idToken) {
+        throw new Error("Please sign in with Google first.");
+    }
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
     try {
-        const response = await fetch(url.toString(), {
-            method: "GET",
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                // text/plain keeps this a CORS-simple request for Apps Script Web Apps.
+                "Content-Type": "text/plain;charset=UTF-8",
+            },
+            body: JSON.stringify({
+                action,
+                params,
+                idToken,
+                device: getDeviceContext(),
+            }),
             cache: "no-store",
             redirect: "follow",
+            credentials: "omit",
+            referrerPolicy: "no-referrer",
             signal: controller.signal,
         });
 
@@ -40,14 +48,18 @@ async function api(action, params = {}) {
         try {
             payload = JSON.parse(rawText);
         } catch (_error) {
-            throw new Error("Server returned invalid JSON.");
+            throw new Error("Server returned invalid JSON. Deploy the secure Apps Script backend first.");
         }
 
         if (payload && payload.success === false) {
+            const code = String(payload.code || "");
+            if (["AUTH_REQUIRED", "AUTH_INVALID", "AUTH_EXPIRED", "AUTH_FORBIDDEN"].includes(code)) {
+                handleAuthExpired(payload.message || "Your Google session is no longer valid.");
+            }
             throw new Error(payload.message || payload.error || "Server rejected the request.");
         }
 
-        return payload;
+        return payload?.data ?? payload?.result ?? payload;
     } catch (error) {
         if (error.name === "AbortError") {
             throw new Error("Request timed out. Please check your internet connection.");
@@ -61,6 +73,10 @@ async function api(action, params = {}) {
     } finally {
         window.clearTimeout(timeoutId);
     }
+}
+
+function authenticateUser(idToken) {
+    return api("authenticate", {}, { idToken });
 }
 
 function getDashboard() {

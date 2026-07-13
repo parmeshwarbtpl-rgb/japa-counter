@@ -35,6 +35,8 @@ function normalizeHistoryEntry(entry, index) {
             mantra: safeText(entry[2]) || "Mantra Jaap",
             count: safeNumber(entry[3]),
             increment: safeNumber(entry[4], 1),
+            action: safeText(entry[5]) || "ADD_COUNT",
+            deviceKey: safeText(entry[6]),
         };
     }
 
@@ -52,8 +54,10 @@ function normalizeHistoryEntry(entry, index) {
         date: safeText(entry.date ?? entry.Date ?? entry.day),
         time: safeText(entry.time ?? entry.Time),
         mantra: safeText(entry.mantra ?? entry.Mantra ?? entry.name) || "Mantra Jaap",
-        count: safeNumber(entry.count ?? entry.Count ?? entry.total ?? entry.today),
+        count: safeNumber(entry.count ?? entry.Count ?? entry.total ?? entry.today ?? entry.todayCount),
         increment,
+        action: safeText(entry.action ?? entry.Action ?? entry.type) || "ADD_COUNT",
+        deviceKey: safeText(entry.deviceKey ?? entry.DeviceKey ?? entry.device),
     };
 }
 

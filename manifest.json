@@ -1,7 +1,7 @@
 {
   "name": "Naam Jaap Counter",
   "short_name": "Jaap Counter",
-  "description": "Digital mantra and Naam Jaap counter with Google Sheets synchronization.",
+  "description": "Secure Google-authenticated digital mantra and Naam Jaap counter with Google Sheets synchronization.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -10,7 +10,10 @@
   "background_color": "#f6f7fb",
   "theme_color": "#ff6f00",
   "lang": "hi-IN",
-  "categories": ["lifestyle", "utilities"],
+  "categories": [
+    "lifestyle",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
@@ -24,5 +27,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "version": "2.3.0"
 }
