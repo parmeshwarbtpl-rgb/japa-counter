@@ -1,0 +1,16 @@
+README / LICENSE / CHANGELOG UPDATE
+
+1. Extract this ZIP.
+2. Open the GitHub repository: parmeshwarbtpl-rgb/japa-counter
+3. Choose Add file -> Upload files.
+4. Upload README.md, CHANGELOG.md, LICENSE, and the docs folder.
+5. Allow README.md to replace the existing file.
+6. Commit with a message such as:
+   docs: add screenshots, feature list, license and changelog
+
+Expected repository paths:
+README.md
+CHANGELOG.md
+LICENSE
+docs/screenshots/dashboard.png
+docs/screenshots/sync-operations.png
