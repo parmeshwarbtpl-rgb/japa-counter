@@ -938,3 +938,103 @@ input[type="number"] {
         padding-right: 6px;
     }
 }
+
+/* Live clock and privacy-friendly Jaap reminder */
+.clock-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #fffaf5, #ffffff);
+    border-color: #ffe0c2;
+}
+
+.clock-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    color: var(--primary-dark);
+    background: var(--primary-soft);
+    border-radius: 16px;
+    font-size: 28px;
+}
+
+.clock-copy {
+    min-width: 0;
+}
+
+.clock-date {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.clock-time {
+    display: block;
+    margin-top: 2px;
+    color: #30323a;
+    font-size: clamp(25px, 8vw, 34px);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+}
+
+.clock-timezone {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.reminder-heading h3 {
+    margin-top: 4px;
+}
+
+.reminder-card input[type="time"],
+.reminder-card input[type="text"] {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 9px;
+    padding: 11px 12px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid #d9dce2;
+    border-radius: 12px;
+}
+
+.reminder-status {
+    margin-top: 16px;
+    padding: 11px 12px;
+    color: #5d4037;
+    background: #fff8f1;
+    border: 1px solid #ffe0c2;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.reminder-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.reminder-actions .primary-btn {
+    grid-column: 1 / -1;
+}
+
+.reminder-help {
+    margin-top: 12px;
+}
+
+@media (max-width: 380px) {
+    .reminder-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .reminder-actions .primary-btn {
+        grid-column: auto;
+    }
+}

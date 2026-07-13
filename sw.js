@@ -1,15 +1,16 @@
-const CACHE_NAME = "naam-jaap-counter-v2-4-0-fast-tap-sync";
+const CACHE_NAME = "naam-jaap-counter-v2-5-0-clock-reminder";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=240",
-    "./config.js?v=240",
-    "./api.js?v=240",
-    "./auth.js?v=240",
-    "./settings.js?v=240",
-    "./history.js?v=240",
-    "./ui.js?v=240",
-    "./app.js?v=240",
+    "./style.css?v=250",
+    "./config.js?v=250",
+    "./api.js?v=250",
+    "./auth.js?v=250",
+    "./settings.js?v=250",
+    "./history.js?v=250",
+    "./ui.js?v=250",
+    "./reminder.js?v=250",
+    "./app.js?v=250",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
@@ -44,6 +45,21 @@ self.addEventListener("fetch", event => {
         return;
     }
 
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            fetch(event.request)
+                .then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const clone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put("./index.html", clone));
+                    }
+                    return networkResponse;
+                })
+                .catch(() => caches.match("./index.html"))
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) return cachedResponse;
@@ -57,6 +73,23 @@ self.addEventListener("fetch", event => {
                 caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
                 return networkResponse;
             });
+        })
+    );
+});
+
+self.addEventListener("notificationclick", event => {
+    event.notification.close();
+    const targetUrl = new URL(event.notification.data?.url || "./", self.location.href).href;
+
+    event.waitUntil(
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then(windowClients => {
+            for (const client of windowClients) {
+                if (client.url.startsWith(self.location.origin) && "focus" in client) {
+                    client.navigate(targetUrl);
+                    return client.focus();
+                }
+            }
+            return clients.openWindow ? clients.openWindow(targetUrl) : undefined;
         })
     );
 });

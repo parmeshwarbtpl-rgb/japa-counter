@@ -11,9 +11,9 @@
     <title>Naam Jaap Counter v2.x</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=240" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=240">
-    <link rel="stylesheet" href="style.css?v=240">
+    <link rel="icon" href="icon-192.png?v=250" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=250">
+    <link rel="stylesheet" href="style.css?v=250">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -58,6 +58,15 @@
     <main class="app-shell">
         <section id="dashboardView" class="view active" data-view="dashboard" aria-labelledby="dashboardTitle">
             <h2 id="dashboardTitle" class="sr-only">Dashboard</h2>
+
+            <section class="card clock-card" aria-label="Current date and time">
+                <div class="clock-icon" aria-hidden="true">◷</div>
+                <div class="clock-copy">
+                    <p id="currentDate" class="clock-date">Loading date…</p>
+                    <strong id="currentTime" class="clock-time">--:--:--</strong>
+                    <p id="currentTimezone" class="clock-timezone">Device local time</p>
+                </div>
+            </section>
 
             <section class="card counter-card">
                 <p class="eyebrow">Selected Mantra</p>
@@ -201,6 +210,39 @@
                 <button id="testVoiceBtn" class="secondary-btn full-width" type="button">Test Selected Voice</button>
             </section>
 
+            <section class="card reminder-card" aria-labelledby="reminderTitle">
+                <div class="section-heading-row reminder-heading">
+                    <div>
+                        <p class="eyebrow">Jaap Reminder</p>
+                        <h3 id="reminderTitle">Daily Reminder</h3>
+                    </div>
+                    <label class="switch" aria-label="Enable daily reminder">
+                        <input id="reminderEnabled" type="checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-field">
+                    <label for="reminderTime">Reminder Time</label>
+                    <input id="reminderTime" type="time" value="06:00">
+                </div>
+
+                <div class="setting-field">
+                    <label for="reminderLabel">Reminder Message</label>
+                    <input id="reminderLabel" type="text" maxlength="80" value="समय हो गया है—नाम जप करें।">
+                </div>
+
+                <p id="reminderStatus" class="reminder-status">Reminder is off.</p>
+
+                <div class="reminder-actions">
+                    <button id="enableNotificationsBtn" class="secondary-btn" type="button">Enable Notifications</button>
+                    <button id="testReminderBtn" class="secondary-btn" type="button">Test Reminder</button>
+                    <button id="addCalendarBtn" class="primary-btn" type="button">Add to Phone Calendar</button>
+                </div>
+
+                <p class="field-help reminder-help">For the most reliable alert when the app is fully closed, add the reminder to your phone calendar. Notification permission is requested only after you tap the button.</p>
+            </section>
+
             <section class="card account-card">
                 <div class="account-profile">
                     <span class="account-avatar" data-user-initial>G</span>
@@ -251,12 +293,13 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="config.js?v=240"></script>
-    <script src="api.js?v=240"></script>
-    <script src="auth.js?v=240"></script>
-    <script src="settings.js?v=240"></script>
-    <script src="history.js?v=240"></script>
-    <script src="ui.js?v=240"></script>
-    <script src="app.js?v=240"></script>
+    <script src="config.js?v=250"></script>
+    <script src="api.js?v=250"></script>
+    <script src="auth.js?v=250"></script>
+    <script src="settings.js?v=250"></script>
+    <script src="history.js?v=250"></script>
+    <script src="ui.js?v=250"></script>
+    <script src="reminder.js?v=250"></script>
+    <script src="app.js?v=250"></script>
 </body>
 </html>

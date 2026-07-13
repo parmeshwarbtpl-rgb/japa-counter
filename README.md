@@ -96,3 +96,17 @@ Version 2.3.2 enables FedCM for the Google sign-in button on supported Chrome ve
 - The button stays responsive while cloud sync runs in the background.
 - Pending counts automatically retry when connectivity improves.
 - Mantra changes and resets wait for pending counts to sync, preserving action order.
+
+## v2.5 Live Clock + Safe Jaap Reminder
+
+- Displays the device's current date, time, and IANA timezone on the dashboard.
+- Stores reminder time/message only in localStorage on the user's device.
+- Requests notification permission only after an explicit button tap.
+- Uses persistent service-worker notifications on supported mobile browsers.
+- Includes a test-notification button.
+- Includes an **Add to Phone Calendar** `.ics` fallback for reliable reminders when the PWA is fully closed.
+- Does not send reminder settings to Google Sheets and does not add new account permissions.
+
+### Reminder reliability
+
+Browser timers cannot guarantee an exact alert after the browser/PWA is fully terminated. For the most reliable background reminder, import the generated daily event into the phone's native calendar. This avoids an additional push server, VAPID secrets, or extra tracking.

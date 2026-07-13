@@ -658,6 +658,9 @@ function stopAuthenticatedApp() {
 
 async function initializeApp() {
     renderSettings();
+    if (typeof initializeClockAndReminder === "function") {
+        initializeClockAndReminder();
+    }
     loadVoices();
     setupSettingsEvents();
     setupInstallPrompt();
