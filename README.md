@@ -82,3 +82,8 @@ This package is configured with the Web OAuth Client ID:
 `984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com`
 
 Deploy the secure Apps Script backend **before** replacing the live GitHub Pages frontend. Follow `DEPLOY_ORDER.txt`.
+
+
+## Mobile Google Sign-In
+
+Version 2.3.2 enables FedCM for the Google sign-in button on supported Chrome versions. On Android and iPhone, open the GitHub Pages URL directly in Chrome or Safari. Google Identity Services is not supported inside WhatsApp, Facebook, Instagram, or other embedded webviews.

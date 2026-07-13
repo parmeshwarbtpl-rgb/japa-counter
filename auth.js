@@ -73,6 +73,12 @@ function getDeviceContext() {
     };
 }
 
+
+function isLikelyEmbeddedBrowser() {
+    const ua = navigator.userAgent || "";
+    return /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|\bwv\b|WebView/i.test(ua);
+}
+
 function getAuthCredential() {
     return authState.idToken || "";
 }
@@ -245,6 +251,9 @@ async function renderGoogleSignIn() {
             cancel_on_tap_outside: true,
             context: "signin",
             ux_mode: "popup",
+            itp_support: true,
+            use_fedcm_for_button: true,
+            button_auto_select: false,
         });
 
         const container = document.getElementById("googleSignInButton");
@@ -260,7 +269,12 @@ async function renderGoogleSignIn() {
             width: Math.min(340, Math.max(240, window.innerWidth - 72)),
             locale: "en",
         });
-        setAuthMessage("Sign in to sync your jaap securely.", "info");
+        setAuthMessage(
+            isLikelyEmbeddedBrowser()
+                ? "For Google sign-in, open this page directly in Chrome or Safari, not inside WhatsApp or another in-app browser."
+                : "Sign in to sync your jaap securely.",
+            "info"
+        );
     } catch (error) {
         setAuthMessage(error.message, "error");
     }
