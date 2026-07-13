@@ -1,5 +1,5 @@
 /**
- * Naam Jaap Counter v2.3 - Secure authenticated API router.
+ * Naam Jaap Counter v2.6 - Secure authenticated API router.
  *
  * IMPORTANT:
  * Replace the old doGet router in 01_Server.gs with this file's contents.
@@ -11,7 +11,7 @@ function doGet() {
   return authJsonResponse_({
     success: true,
     service: 'Naam Jaap Counter Secure API',
-    version: '2.3.0-auth-safe',
+    version: '2.6.0-offline-safe',
     authRequired: true,
     message: 'Use authenticated POST requests.'
   });
@@ -81,20 +81,8 @@ function authDispatchAction_(action, params, session) {
     case 'getDashboard':
       return authNormalizeLegacyResult_(getDashboard());
 
-    case 'addCount': {
-      var increment = Math.max(1, Math.min(1000, Number(params.num || 1)));
-      var addResult = authNormalizeLegacyResult_(addCount(increment));
-      var addDashboard = authGetDashboardSnapshot_(addResult);
-      authLogActivity_(
-        session,
-        'ADD_COUNT',
-        addDashboard.mantra || '',
-        increment,
-        addDashboard,
-        ''
-      );
-      return addResult;
-    }
+    case 'addCount':
+      return authProcessCountOperation_(session, params);
 
     case 'saveMantra': {
       var mantra = authSanitizeMantra_(
@@ -104,18 +92,7 @@ function authDispatchAction_(action, params, session) {
         throw authError_('BAD_REQUEST', 'A valid mantra is required.');
       }
 
-      var mantraResult = authNormalizeLegacyResult_(saveMantra(mantra));
-      var mantraDashboard = authGetDashboardSnapshot_(mantraResult);
-      mantraDashboard.mantra = mantra;
-      authLogActivity_(
-        session,
-        'MANTRA_CHANGE',
-        mantra,
-        0,
-        mantraDashboard,
-        'Selected mantra changed'
-      );
-      return mantraResult;
+      return authProcessMantraOperation_(session, params, mantra);
     }
 
     case 'resetToday': {

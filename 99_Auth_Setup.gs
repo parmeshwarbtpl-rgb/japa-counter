@@ -6,7 +6,7 @@
  * 4. Deploy a NEW Web App version.
  */
 function setupSecureAuthentication() {
-  var googleClientId = 'PASTE_YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+  var googleClientId = '984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com';
 
   if (googleClientId.indexOf('PASTE_YOUR') !== -1) {
     throw new Error('Paste the Google Web Client ID into 99_Auth_Setup.gs first.');
@@ -18,6 +18,7 @@ function setupSecureAuthentication() {
   );
 
   authEnsureAuditSheets_();
+  authEnsureOfflineSyncSheet_();
   Logger.log('Secure authentication is configured. Deploy a new Web App version.');
 }
 

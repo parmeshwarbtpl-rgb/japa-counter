@@ -1,37 +1,65 @@
-NAAM JAAP COUNTER — GOOGLE LOGIN DEPLOYMENT ORDER
+NAAM JAAP COUNTER v2.6 — OFFLINE SAFE DEPLOYMENT ORDER
 
-Configured Web OAuth Client ID:
-984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com
-
-IMPORTANT: Deploy the backend first. Uploading the frontend before the secure backend is deployed will make the live app show login/API errors.
+IMPORTANT: DEPLOY THE APPS SCRIPT BACKEND FIRST.
+The new frontend sends stable operation IDs. The backend patch is required to safely de-duplicate completed offline batches.
 
 1. GOOGLE APPS SCRIPT
-   - Replace existing 01_Server.gs contents with apps-script/01_Server_SECURE_REPLACEMENT.gs.
-   - Add apps-script/06_Auth.gs.
-   - Add apps-script/07_UserActivity.gs.
-   - Add apps-script/99_Auth_Setup.gs.
-   - Run setupSecureAuthentication() once and approve permissions.
-   - Deploy > Manage deployments > Edit > New version > Deploy.
-   - Keep: Execute as Me; Who has access: Anyone.
+   - Replace existing 01_Server.gs contents with:
+     apps-script/01_Server_SECURE_REPLACEMENT.gs
+   - Confirm these existing secure files are present/current:
+     apps-script/06_Auth.gs
+     apps-script/07_UserActivity.gs
+   - Add the new file:
+     apps-script/08_OfflineSync.gs
+   - Replace/update:
+     apps-script/99_Auth_Setup.gs
+   - Save all files.
 
-2. TEST BACKEND
-   - Open the /exec URL. It should return JSON saying authRequired is true and authenticated POST requests must be used.
+2. RUN SETUP
+   - Select setupSecureAuthentication() and Run it once.
+   - Approve permissions if requested.
+   - Confirm these sheets exist:
+     Users
+     Devices
+     User_Activity
+     Sync_Operations
 
-3. GITHUB PAGES FRONTEND
-   - Upload the root frontend files to the repository root.
-   - Do not upload the apps-script folder publicly unless you intentionally want to publish backend source.
-   - Commit changes and wait for GitHub Pages deployment.
+3. DEPLOY A NEW WEB APP VERSION
+   Deploy > Manage deployments > Edit > New version > Deploy
 
-4. REFRESH / REINSTALL
-   - Desktop: Ctrl + Shift + R.
-   - Mobile: clear site data or uninstall the old PWA and install again.
+   Keep:
+   Execute as: Me
+   Who has access: Anyone
 
-5. VERIFY
-   - Sign in with Google.
-   - Check Users, Devices, and User_Activity sheets.
-   - Test +1, mantra change, reset, and History.
+   The /exec URL normally stays the same when an existing deployment is edited.
 
-Security notes:
-- The OAuth Client ID is public and safe to include in frontend code.
-- Never upload or share a Google OAuth Client Secret.
-- The app stores no Google password and does not store raw ID tokens in Sheets.
+4. TEST BACKEND
+   Open the /exec URL. It should return JSON containing:
+   version: 2.6.0-offline-safe
+   authRequired: true
+
+5. GITHUB PAGES FRONTEND
+   - Upload the frontend files from the package root to the repository root.
+   - Do not upload the apps-script folder publicly unless intended.
+   - Commit changes and wait for Pages deployment.
+
+6. CLEAR OLD PWA CACHE
+   Desktop: Ctrl + Shift + R
+   Mobile: clear site data or uninstall the old PWA, open the website once online, then install it again.
+
+7. OFFLINE TEST
+   - Sign in online once.
+   - Tap several counts and wait for Synced.
+   - Turn on Airplane Mode.
+   - Reopen the installed app.
+   - Tap at least 5 times; status should say saved locally.
+   - Fully close and reopen; the count should remain.
+   - Restore internet.
+   - Tap Sign in to Sync and authenticate.
+   - Confirm Sync_Operations and User_Activity entries and the Dashboard total.
+
+SECURITY NOTES
+- Never put a Google OAuth Client Secret in GitHub or Apps Script frontend files.
+- Google ID tokens remain in sessionStorage only.
+- Offline access expires after 7 days without a fresh verified login.
+- Explicit Sign Out removes offline access from that device.
