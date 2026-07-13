@@ -378,10 +378,11 @@ function animateTapButton(event) {
         floatingPlus.remove();
     }, 1000);
 }
-function handleTap() {
+function handleTap(event) {
     if (!hasActiveAppSession()) return;
-    ensureCurrentLocalDay();
-    dashboardState = {
+
+    animateTapButton(event);
+    ensureCurrentLocalDay();    dashboardState = {
         ...dashboardState,
         today: dashboardState.today + 1,
         lifetime: dashboardState.lifetime + 1,
