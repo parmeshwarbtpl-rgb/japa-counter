@@ -321,7 +321,63 @@ async function syncQueueBeforeCriticalAction() {
     const summary = await pendingSummary();
     return summary.operations === 0;
 }
+// ======================================
+// Tap Button + Floating +1 Animation
+// ======================================
 
+function animateTapButton(event) {
+    const button = elements.tapButton;
+    const card = button?.closest(".counter-card");
+
+    if (!button || !card) return;
+
+    // Restart bounce and ripple animation.
+    button.classList.remove("tap-animate");
+    void button.offsetWidth;
+    button.classList.add("tap-animate");
+
+    window.setTimeout(() => {
+        button.classList.remove("tap-animate");
+    }, 550);
+
+    // Floating +1 animation.
+    const floatingPlus = document.createElement("span");
+
+    floatingPlus.className = "tap-floating-plus";
+    floatingPlus.textContent = "+1";
+    floatingPlus.setAttribute("aria-hidden", "true");
+
+    const cardRect = card.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+
+    const hasPointerPosition =
+        event &&
+        Number(event.clientX) > 0 &&
+        Number(event.clientY) > 0;
+
+    const left = hasPointerPosition
+        ? event.clientX - cardRect.left
+        : buttonRect.left - cardRect.left + buttonRect.width / 2;
+
+    const top = hasPointerPosition
+        ? event.clientY - cardRect.top
+        : buttonRect.top - cardRect.top + buttonRect.height / 2;
+
+    floatingPlus.style.left = `${left}px`;
+    floatingPlus.style.top = `${top}px`;
+
+    card.appendChild(floatingPlus);
+
+    floatingPlus.addEventListener(
+        "animationend",
+        () => floatingPlus.remove(),
+        { once: true }
+    );
+
+    window.setTimeout(() => {
+        floatingPlus.remove();
+    }, 1000);
+}
 function handleTap() {
     if (!hasActiveAppSession()) return;
     ensureCurrentLocalDay();
