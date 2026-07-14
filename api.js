@@ -79,8 +79,8 @@ function authenticateUser(idToken) {
     return api("authenticate", {}, { idToken });
 }
 
-function getDashboard() {
-    return api("getDashboard");
+function getDashboard(mantra = "", localDate = "") {
+    return api("getDashboard", { mantra, selectedMantra: mantra, localDate });
 }
 
 function addCount(num = 1, operationId = "", metadata = {}) {
@@ -90,25 +90,27 @@ function addCount(num = 1, operationId = "", metadata = {}) {
         batchId: operationId,
         clientCreatedAt: metadata.clientCreatedAt || "",
         localDate: metadata.localDate || "",
+        dashboardDate: metadata.dashboardDate || metadata.localDate || "",
         mantra: metadata.mantra || "",
     });
 }
 
-function saveMantra(mantra, operationId = "") {
+function saveMantra(mantra, operationId = "", localDate = "") {
     return api("saveMantra", {
         mantra,
         selectedMantra: mantra,
         value: mantra,
         operationId,
+        localDate,
     });
 }
 
-function resetToday() {
-    return api("resetToday");
+function resetToday(mantra, localDate = "") {
+    return api("resetToday", { mantra, selectedMantra: mantra, localDate });
 }
 
-function resetAll() {
-    return api("resetAll");
+function resetAll(mantra, localDate = "") {
+    return api("resetAll", { mantra, selectedMantra: mantra, localDate });
 }
 
 function getHistory(limit = 100) {

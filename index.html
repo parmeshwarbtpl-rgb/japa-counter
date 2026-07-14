@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="A simple digital Naam Jaap and mantra counter with Google Sheets synchronization.">
     <meta name="theme-color" content="#ff6f00">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <title>Naam Jaap Counter v2.x</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=260" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=260">
-    <link rel="stylesheet" href="style.css?v=261">
+    <link rel="icon" href="icon-192.png?v=270" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=270">
+    <link rel="stylesheet" href="style.css?v=270">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -95,13 +96,36 @@
 
             <section class="stats" aria-label="Jaap statistics">
                 <article class="stat-card">
-                    <span>Today</span>
+                    <span>Mantra Today</span>
                     <strong id="today">0</strong>
                 </article>
                 <article class="stat-card">
-                    <span>Lifetime</span>
+                    <span>Mantra Lifetime</span>
                     <strong id="lifetime">0</strong>
                 </article>
+            </section>
+
+            <section class="card mala-card" aria-labelledby="malaTitle">
+                <div class="section-heading-row">
+                    <div>
+                        <p class="eyebrow">Selected Mantra</p>
+                        <h3 id="malaTitle">Mala Progress</h3>
+                    </div>
+                    <strong id="malaProgressText" class="mala-progress-text">0 / 108</strong>
+                </div>
+                <div class="progress-track mala-progress-track" role="progressbar" aria-label="Current mala progress" aria-valuemin="0" aria-valuemax="108" aria-valuenow="0">
+                    <div id="malaProgress" class="progress-fill mala-progress-fill"></div>
+                </div>
+                <div class="mala-stats">
+                    <div>
+                        <span>Malas Today</span>
+                        <strong id="todayMalas">0</strong>
+                    </div>
+                    <div>
+                        <span>Lifetime Malas</span>
+                        <strong id="lifetimeMalas">0</strong>
+                    </div>
+                </div>
             </section>
 
             <section class="card target-card">
@@ -118,8 +142,8 @@
             </section>
 
             <section class="card action-buttons" aria-label="Reset counter actions">
-                <button id="resetTodayBtn" class="secondary-btn" type="button">Reset Today</button>
-                <button id="resetAllBtn" class="danger-btn" type="button">Reset Lifetime</button>
+                <button id="resetTodayBtn" class="secondary-btn" type="button">Reset This Mantra Today</button>
+                <button id="resetAllBtn" class="danger-btn" type="button">Reset This Mantra Lifetime</button>
             </section>
         </section>
 
@@ -295,14 +319,14 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="config.js?v=260"></script>
-    <script src="offline.js?v=260"></script>
-    <script src="api.js?v=260"></script>
-    <script src="auth.js?v=260"></script>
-    <script src="settings.js?v=260"></script>
-    <script src="history.js?v=260"></script>
-    <script src="ui.js?v=260"></script>
-    <script src="reminder.js?v=260"></script>
-    <script src="app.js?v=261"></script>
+    <script src="config.js?v=270"></script>
+    <script src="offline.js?v=270"></script>
+    <script src="api.js?v=270"></script>
+    <script src="auth.js?v=270"></script>
+    <script src="settings.js?v=270"></script>
+    <script src="history.js?v=270"></script>
+    <script src="ui.js?v=270"></script>
+    <script src="reminder.js?v=270"></script>
+    <script src="app.js?v=270"></script>
 </body>
 </html>

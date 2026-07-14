@@ -13,7 +13,12 @@ const elements = {
     targetTotal: document.getElementById("targetTotal"),
     targetPercent: document.getElementById("targetPercent"),
     targetProgress: document.getElementById("targetProgress"),
-    progressTrack: document.querySelector(".progress-track"),
+    progressTrack: document.querySelector(".target-card .progress-track"),
+    malaProgressText: document.getElementById("malaProgressText"),
+    malaProgress: document.getElementById("malaProgress"),
+    malaProgressTrack: document.querySelector(".mala-progress-track"),
+    todayMalas: document.getElementById("todayMalas"),
+    lifetimeMalas: document.getElementById("lifetimeMalas"),
     historyList: document.getElementById("historyList"),
     historyLoading: document.getElementById("historyLoading"),
     historyEmpty: document.getElementById("historyEmpty"),
@@ -43,6 +48,11 @@ let dashboardState = {
     today: 0,
     lifetime: 0,
     mantra: elements.mantraSelect.value,
+    malaSize: 108,
+    currentMalaCount: 0,
+    todayMalas: 0,
+    lifetimeMalas: 0,
+    malasCompleted: 0,
 };
 let historyLoaded = false;
 let deferredInstallPrompt = null;
@@ -75,11 +85,22 @@ function normalizeDashboard(payload) {
         data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? dashboardState.lifetime ?? 0
     );
     const mantra = String(data.mantra ?? data.selectedMantra ?? dashboardState.mantra ?? "").trim();
+    const malaSize = Math.max(1, Number(data.malaSize ?? dashboardState.malaSize ?? 108));
+    const safeToday = Number.isFinite(today) ? Math.max(0, today) : 0;
+    const safeLifetime = Number.isFinite(lifetime) ? Math.max(0, lifetime) : 0;
 
     return {
-        today: Number.isFinite(today) ? today : 0,
-        lifetime: Number.isFinite(lifetime) ? lifetime : 0,
+        today: safeToday,
+        lifetime: safeLifetime,
         mantra: mantra || elements.mantraSelect.options[0].value,
+        malaSize,
+        currentMalaCount: Math.max(0, Number(data.currentMalaCount ?? (safeToday % malaSize))),
+        todayMalas: Math.max(0, Number(data.todayMalas ?? Math.floor(safeToday / malaSize))),
+        lifetimeMalas: Math.max(0, Number(data.lifetimeMalas ?? Math.floor(safeLifetime / malaSize))),
+        malasCompleted: Math.max(0, Number(data.malasCompleted ?? 0)),
+        overallToday: data.overallToday ?? null,
+        overallLifetime: data.overallLifetime ?? null,
+        localDate: String(data.localDate || offlineLocalDateKey()),
     };
 }
 
@@ -102,6 +123,7 @@ function updateDashboard(payload, options = {}) {
     }
 
     elements.mantraSelect.value = dashboardState.mantra;
+    updateMalaProgress();
     updateTargetProgress();
 
     if (options.animate) {
@@ -109,6 +131,39 @@ function updateDashboard(payload, options = {}) {
         void elements.counter.offsetWidth;
         elements.counter.classList.add("pulse");
     }
+}
+
+function updateMalaProgress() {
+    const malaSize = Math.max(1, Number(dashboardState.malaSize || 108));
+    const current = Math.max(0, Number(dashboardState.currentMalaCount || 0));
+    const percent = Math.min(100, Math.round((current / malaSize) * 100));
+
+    if (elements.malaProgressText) {
+        elements.malaProgressText.textContent = `${current.toLocaleString("en-IN")} / ${malaSize.toLocaleString("en-IN")}`;
+    }
+    if (elements.malaProgress) {
+        elements.malaProgress.style.width = `${percent}%`;
+    }
+    if (elements.malaProgressTrack) {
+        elements.malaProgressTrack.setAttribute("aria-valuemax", String(malaSize));
+        elements.malaProgressTrack.setAttribute("aria-valuenow", String(current));
+    }
+    if (elements.todayMalas) {
+        elements.todayMalas.textContent = dashboardState.todayMalas.toLocaleString("en-IN");
+    }
+    if (elements.lifetimeMalas) {
+        elements.lifetimeMalas.textContent = dashboardState.lifetimeMalas.toLocaleString("en-IN");
+    }
+}
+
+function showMalaCompletion(completed = 1) {
+    const count = Math.max(1, Number(completed || 1));
+    const message = count === 1
+        ? `🎉 1 माला पूर्ण हुई — ${dashboardState.mantra}`
+        : `🎉 ${count} मालाएँ पूर्ण हुईं — ${dashboardState.mantra}`;
+
+    showToast(message, "success", 5200);
+    if (navigator.vibrate) navigator.vibrate([120, 70, 120]);
 }
 
 function updateTargetProgress() {
@@ -130,7 +185,13 @@ function ensureCurrentLocalDay() {
     const todayKey = offlineLocalDateKey();
     if (dashboardLocalDate !== todayKey) {
         dashboardLocalDate = todayKey;
-        dashboardState = { ...dashboardState, today: 0 };
+        dashboardState = {
+            ...dashboardState,
+            today: 0,
+            currentMalaCount: 0,
+            todayMalas: 0,
+            malasCompleted: 0,
+        };
         updateDashboard(dashboardState);
     }
 }
@@ -143,12 +204,22 @@ function cacheDashboard() {
     });
 }
 
-async function loadLocalDashboard() {
+async function loadLocalDashboard(mantra = "") {
     const userId = currentUserId();
     if (!userId) return false;
-    const cached = await offlineLoadDashboard(userId);
+    const requestedMantra = String(mantra || "");
+    const cached = await offlineLoadDashboard(userId, requestedMantra);
     if (!cached) {
-        updateDashboard({ today: 0, lifetime: 0, mantra: dashboardState.mantra });
+        const fallbackMantra = requestedMantra || dashboardState.mantra;
+        updateDashboard({
+            today: 0,
+            lifetime: 0,
+            mantra: fallbackMantra,
+            malaSize: 108,
+            currentMalaCount: 0,
+            todayMalas: 0,
+            lifetimeMalas: 0,
+        });
         dashboardLocalDate = offlineLocalDateKey();
         return false;
     }
@@ -161,20 +232,37 @@ async function pendingSummary() {
     const userId = currentUserId();
     return userId
         ? offlineGetPendingSummary(userId)
-        : { operations: 0, count: 0, mantraChanges: 0 };
+        : { operations: 0, count: 0, mantraChanges: 0, countsByMantra: {}, todayCountsByMantra: {} };
 }
 
-function mergeServerDashboardWithPending(payload, pendingCount = 0, preserveLocalMantra = false) {
-    const data = unwrapDashboardPayload(payload);
-    const serverToday = Number(data.today ?? data.todayCount ?? data.daily ?? data.count);
-    const serverLifetime = Number(data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total);
-    const serverMantra = String(data.mantra ?? data.selectedMantra ?? "").trim();
+function pendingCountsForMantra(summary, mantra = dashboardState.mantra) {
+    const key = String(mantra || "");
     return {
-        today: Number.isFinite(serverToday) ? serverToday + pendingCount : dashboardState.today,
-        lifetime: Number.isFinite(serverLifetime) ? serverLifetime + pendingCount : dashboardState.lifetime,
-        mantra: preserveLocalMantra
-            ? dashboardState.mantra
-            : (serverMantra || dashboardState.mantra),
+        today: Math.max(0, Number(summary?.todayCountsByMantra?.[key] || 0)),
+        lifetime: Math.max(0, Number(summary?.countsByMantra?.[key] || 0)),
+    };
+}
+
+function mergeServerDashboardWithPending(payload, pendingToday = 0, pendingLifetime = pendingToday, preserveLocalMantra = false) {
+    const data = normalizeDashboard(payload);
+    const mantra = preserveLocalMantra ? dashboardState.mantra : data.mantra;
+    const sameMantra = String(data.mantra) === String(mantra);
+    const baseToday = sameMantra ? data.today : dashboardState.today;
+    const baseLifetime = sameMantra ? data.lifetime : dashboardState.lifetime;
+    const today = Math.max(0, Number(baseToday || 0) + Number(pendingToday || 0));
+    const lifetime = Math.max(0, Number(baseLifetime || 0) + Number(pendingLifetime || 0));
+    const malaSize = Math.max(1, Number(data.malaSize || dashboardState.malaSize || 108));
+
+    return {
+        ...data,
+        today,
+        lifetime,
+        mantra,
+        malaSize,
+        currentMalaCount: today % malaSize,
+        todayMalas: Math.floor(today / malaSize),
+        lifetimeMalas: Math.floor(lifetime / malaSize),
+        malasCompleted: 0,
     };
 }
 
@@ -190,9 +278,18 @@ async function loadDashboard(options = {}) {
 
     setConnectionStatus("loading", "Syncing with Google Sheets…");
     try {
-        const payload = await getDashboard();
+        const requestedMantra = options.mantra !== undefined
+            ? String(options.mantra || "")
+            : dashboardState.mantra;
+        const payload = await getDashboard(requestedMantra, offlineLocalDateKey());
         const summary = await pendingSummary();
-        updateDashboard(mergeServerDashboardWithPending(payload, summary.count, summary.mantraChanges > 0));
+        const pending = pendingCountsForMantra(summary);
+        updateDashboard(mergeServerDashboardWithPending(
+            payload,
+            pending.today,
+            pending.lifetime,
+            summary.mantraChanges > 0
+        ));
         dashboardLocalDate = offlineLocalDateKey();
         await cacheDashboard();
         setConnectionStatus("online", summary.operations
@@ -243,18 +340,35 @@ async function syncOneOfflineOperation(operation) {
             payload = await addCount(operation.count, operation.id, {
                 clientCreatedAt: operation.createdAt,
                 localDate: operation.localDate,
+                dashboardDate: offlineLocalDateKey(),
                 mantra: operation.mantra,
             });
         } else if (operation.type === "MANTRA") {
-            payload = await saveMantra(operation.mantra, operation.id);
+            payload = await saveMantra(operation.mantra, operation.id, offlineLocalDateKey());
         } else {
             throw new Error("Unsupported offline operation.");
         }
 
         await offlineCompleteOperation(operation.id);
         const summary = await pendingSummary();
-        updateDashboard(mergeServerDashboardWithPending(payload, summary.count, true));
-        await cacheDashboard();
+        const payloadMantra = String(unwrapDashboardPayload(payload).mantra || operation.mantra || "");
+
+        if (payloadMantra === dashboardState.mantra) {
+            const pending = pendingCountsForMantra(summary, dashboardState.mantra);
+            updateDashboard(mergeServerDashboardWithPending(
+                payload,
+                pending.today,
+                pending.lifetime,
+                false
+            ));
+            await cacheDashboard();
+        } else {
+            await offlineSaveDashboard(currentUserId(), normalizeDashboard({
+                ...unwrapDashboardPayload(payload),
+                mantra: payloadMantra,
+            }), { setSelected: false });
+        }
+
         historyLoaded = false;
         return true;
     } catch (error) {
@@ -297,9 +411,14 @@ function flushOfflineQueue() {
         }
 
         try {
-            const server = await getDashboard();
+            const server = await getDashboard(dashboardState.mantra, offlineLocalDateKey());
             const summary = await pendingSummary();
-            updateDashboard(mergeServerDashboardWithPending(server, summary.count));
+            const pending = pendingCountsForMantra(summary);
+            updateDashboard(mergeServerDashboardWithPending(
+                server,
+                pending.today,
+                pending.lifetime
+            ));
             await cacheDashboard();
         } catch (error) {
             console.warn("Post-sync dashboard refresh failed:", error);
@@ -321,74 +440,31 @@ async function syncQueueBeforeCriticalAction() {
     const summary = await pendingSummary();
     return summary.operations === 0;
 }
-// ======================================
-// Tap Button + Floating +1 Animation
-// ======================================
 
-function animateTapButton(event) {
-    const button = elements.tapButton;
-    const card = button?.closest(".counter-card");
-
-    if (!button || !card) return;
-
-    // Restart bounce and ripple animation.
-    button.classList.remove("tap-animate");
-    void button.offsetWidth;
-    button.classList.add("tap-animate");
-
-    window.setTimeout(() => {
-        button.classList.remove("tap-animate");
-    }, 550);
-
-    // Floating +1 animation.
-    const floatingPlus = document.createElement("span");
-
-    floatingPlus.className = "tap-floating-plus";
-    floatingPlus.textContent = "+1";
-    floatingPlus.setAttribute("aria-hidden", "true");
-
-    const cardRect = card.getBoundingClientRect();
-    const buttonRect = button.getBoundingClientRect();
-
-    const hasPointerPosition =
-        event &&
-        Number(event.clientX) > 0 &&
-        Number(event.clientY) > 0;
-
-    const left = hasPointerPosition
-        ? event.clientX - cardRect.left
-        : buttonRect.left - cardRect.left + buttonRect.width / 2;
-
-    const top = hasPointerPosition
-        ? event.clientY - cardRect.top
-        : buttonRect.top - cardRect.top + buttonRect.height / 2;
-
-    floatingPlus.style.left = `${left}px`;
-    floatingPlus.style.top = `${top}px`;
-
-    card.appendChild(floatingPlus);
-
-    floatingPlus.addEventListener(
-        "animationend",
-        () => floatingPlus.remove(),
-        { once: true }
-    );
-
-    window.setTimeout(() => {
-        floatingPlus.remove();
-    }, 1000);
-}
 function handleTap(event) {
     if (!hasActiveAppSession()) return;
+    ensureCurrentLocalDay();
 
-    animateTapButton(event);
-    ensureCurrentLocalDay();    dashboardState = {
+    const previousMalas = Math.max(0, Number(dashboardState.todayMalas || 0));
+    const malaSize = Math.max(1, Number(dashboardState.malaSize || 108));
+    const nextToday = dashboardState.today + 1;
+    const nextLifetime = dashboardState.lifetime + 1;
+
+    dashboardState = {
         ...dashboardState,
-        today: dashboardState.today + 1,
-        lifetime: dashboardState.lifetime + 1,
+        today: nextToday,
+        lifetime: nextLifetime,
+        currentMalaCount: nextToday % malaSize,
+        todayMalas: Math.floor(nextToday / malaSize),
+        lifetimeMalas: Math.floor(nextLifetime / malaSize),
+        malasCompleted: 0,
     };
     updateDashboard(dashboardState, { animate: true });
     historyLoaded = false;
+
+    if (dashboardState.todayMalas > previousMalas) {
+        showMalaCompletion(dashboardState.todayMalas - previousMalas);
+    }
 
     offlineQueueCount({
         userId: currentUserId(),
@@ -412,32 +488,30 @@ function handleTap(event) {
 
 async function handleMantraChange() {
     const nextMantra = elements.mantraSelect.value;
-    const previousMantra = dashboardState.mantra;
-    dashboardState.mantra = nextMantra;
-    elements.mantra.textContent = nextMantra;
-    elements.mantraSelect.value = nextMantra;
+    const previousState = { ...dashboardState };
 
     try {
+        await cacheDashboard();
+        await loadLocalDashboard(nextMantra);
+
         await offlineQueueMantra({
             userId: currentUserId(),
             deviceKey: authState.deviceKey,
             mantra: nextMantra,
             dashboard: dashboardState,
         });
-        await cacheDashboard();
+
         historyLoaded = false;
         showToast(navigator.onLine && isAuthenticated()
-            ? "Mantra saved; syncing…"
-            : "Mantra saved offline.", "success");
+            ? "Mantra selected; loading its separate count…"
+            : "Mantra selected offline.", "success");
         if (appSettings.voiceEnabled) speakMantra(nextMantra);
         await refreshPendingStatus();
         if (navigator.onLine && isAuthenticated()) scheduleQueueSync(100);
     } catch (error) {
         console.error("Mantra queue failed:", error);
-        dashboardState.mantra = previousMantra;
-        elements.mantra.textContent = previousMantra;
-        elements.mantraSelect.value = previousMantra;
-        showToast("Mantra could not be saved on this device.", "error", 5000);
+        updateDashboard(previousState);
+        showToast("Mantra could not be changed on this device.", "error", 5000);
     }
 }
 
@@ -446,7 +520,7 @@ async function handleResetToday() {
         showToast("Reset is disabled offline to prevent data conflicts.", "error", 4500);
         return;
     }
-    if (!window.confirm("Reset today's counter to zero?")) return;
+    if (!window.confirm(`Reset today's count for ${dashboardState.mantra}?`)) return;
     if (!(await syncQueueBeforeCriticalAction())) {
         showToast("Saved offline counts must sync before reset.", "error", 4500);
         return;
@@ -454,12 +528,12 @@ async function handleResetToday() {
 
     setButtonBusy(elements.resetTodayButton, true, "Resetting…");
     try {
-        const payload = await resetToday();
+        const payload = await resetToday(dashboardState.mantra, offlineLocalDateKey());
         updateDashboard(payload);
         dashboardLocalDate = offlineLocalDateKey();
         await cacheDashboard();
         historyLoaded = false;
-        showToast("Today's counter has been reset.", "success");
+        showToast("This mantra's today count has been reset.", "success");
     } catch (error) {
         console.error("Reset today failed:", error);
         showToast(error.message || "Today's counter could not be reset.", "error", 5000);
@@ -474,7 +548,7 @@ async function handleResetAll() {
         return;
     }
     const confirmed = window.confirm(
-        "Reset the lifetime counter? This is a major action and cannot be undone from the app."
+        `Reset all saved counts for ${dashboardState.mantra}? This cannot be undone.`
     );
     if (!confirmed) return;
     if (!(await syncQueueBeforeCriticalAction())) {
@@ -484,11 +558,11 @@ async function handleResetAll() {
 
     setButtonBusy(elements.resetAllButton, true, "Resetting…");
     try {
-        const payload = await resetAll();
+        const payload = await resetAll(dashboardState.mantra, offlineLocalDateKey());
         updateDashboard(payload);
         await cacheDashboard();
         historyLoaded = false;
-        showToast("Lifetime counter has been reset.", "success");
+        showToast("This mantra's lifetime count has been reset.", "success");
     } catch (error) {
         console.error("Reset lifetime failed:", error);
         showToast(error.message || "Lifetime counter could not be reset.", "error", 5000);
@@ -852,7 +926,11 @@ async function startAuthenticatedApp() {
     }
 
     setConnectionStatus("loading", "Signed in — syncing…");
-    await loadDashboard({ showError: false });
+    const restoredLocal = await loadLocalDashboard("").catch(() => false);
+    await loadDashboard({
+        showError: false,
+        mantra: restoredLocal ? dashboardState.mantra : "",
+    });
     scheduleQueueSync(100);
 }
 

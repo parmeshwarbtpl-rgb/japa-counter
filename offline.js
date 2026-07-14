@@ -193,8 +193,12 @@ function offlineProfileKey() {
     return "verifiedProfile";
 }
 
-function offlineDashboardKey(userId) {
-    return `dashboard:${String(userId || "")}`;
+function offlineDashboardKey(userId, mantra) {
+    return `dashboard:${String(userId || "")}:${encodeURIComponent(String(mantra || ""))}`;
+}
+
+function offlineSelectedMantraKey(userId) {
+    return `selected-mantra:${String(userId || "")}`;
 }
 
 async function offlineSaveVerifiedProfile(user, deviceKey) {
@@ -228,26 +232,54 @@ async function offlineClearVerifiedProfile() {
     await offlineDeleteMeta(offlineProfileKey());
 }
 
-async function offlineSaveDashboard(userId, dashboard) {
+async function offlineSaveDashboard(userId, dashboard, options = {}) {
     if (!userId || !dashboard) return;
+    const mantra = String(dashboard.mantra || "").slice(0, 200);
+    if (!mantra) return;
+
+    const today = Math.max(0, Number(dashboard.today || 0));
+    const lifetime = Math.max(0, Number(dashboard.lifetime || 0));
+    const malaSize = Math.max(1, Number(dashboard.malaSize || 108));
     const safe = {
-        today: Math.max(0, Number(dashboard.today || 0)),
-        lifetime: Math.max(0, Number(dashboard.lifetime || 0)),
-        mantra: String(dashboard.mantra || "").slice(0, 200),
+        today,
+        lifetime,
+        mantra,
+        malaSize,
+        currentMalaCount: Math.max(0, Number(dashboard.currentMalaCount ?? (today % malaSize))),
+        todayMalas: Math.max(0, Number(dashboard.todayMalas ?? Math.floor(today / malaSize))),
+        lifetimeMalas: Math.max(0, Number(dashboard.lifetimeMalas ?? Math.floor(lifetime / malaSize))),
         localDate: offlineLocalDateKey(),
         savedAt: Date.now(),
     };
-    await offlinePutMeta(offlineDashboardKey(userId), safe);
+
+    await offlinePutMeta(offlineDashboardKey(userId, mantra), safe);
+    if (options.setSelected !== false) {
+        await offlinePutMeta(offlineSelectedMantraKey(userId), mantra);
+    }
 }
 
-async function offlineLoadDashboard(userId) {
-    const saved = await offlineGetMeta(offlineDashboardKey(userId));
+async function offlineLoadDashboard(userId, mantra = "") {
+    const selectedMantra = String(
+        mantra || await offlineGetMeta(offlineSelectedMantraKey(userId)) || ""
+    );
+    if (!selectedMantra) return null;
+
+    const saved = await offlineGetMeta(offlineDashboardKey(userId, selectedMantra));
     if (!saved) return null;
+
+    const malaSize = Math.max(1, Number(saved.malaSize || 108));
     const today = saved.localDate === offlineLocalDateKey() ? Number(saved.today || 0) : 0;
+    const lifetime = Math.max(0, Number(saved.lifetime || 0));
+
     return {
         today: Math.max(0, today),
-        lifetime: Math.max(0, Number(saved.lifetime || 0)),
-        mantra: String(saved.mantra || ""),
+        lifetime,
+        mantra: selectedMantra,
+        malaSize,
+        currentMalaCount: Math.max(0, today % malaSize),
+        todayMalas: Math.max(0, Math.floor(today / malaSize)),
+        lifetimeMalas: Math.max(0, Number(saved.lifetimeMalas ?? Math.floor(lifetime / malaSize))),
+        malasCompleted: 0,
         localDate: offlineLocalDateKey(),
         savedAt: Number(saved.savedAt || 0),
     };
@@ -353,13 +385,28 @@ async function offlineGetPendingSummary(userId) {
     const items = await offlineListPending(userId);
     return items.reduce((summary, item) => {
         summary.operations += 1;
-        if (item.type === "COUNT") summary.count += Number(item.count || 0);
+        if (item.type === "COUNT") {
+            const count = Number(item.count || 0);
+            const mantra = String(item.mantra || "");
+            summary.count += count;
+            summary.countsByMantra[mantra] = Number(summary.countsByMantra[mantra] || 0) + count;
+            if (String(item.localDate || "") === offlineLocalDateKey()) {
+                summary.todayCountsByMantra[mantra] = Number(summary.todayCountsByMantra[mantra] || 0) + count;
+            }
+        }
         if (item.type === "MANTRA") {
             summary.mantraChanges += 1;
             summary.latestMantra = String(item.mantra || summary.latestMantra || "");
         }
         return summary;
-    }, { operations: 0, count: 0, mantraChanges: 0, latestMantra: "" });
+    }, {
+        operations: 0,
+        count: 0,
+        mantraChanges: 0,
+        latestMantra: "",
+        countsByMantra: {},
+        todayCountsByMantra: {},
+    });
 }
 
 async function offlineMarkSyncing(id) {

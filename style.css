@@ -1061,112 +1061,63 @@ input[type="number"] {
 .banner-action:hover {
     background: #fff7ed;
 }
+
 /* =====================================
-   Tap Button Animation
+   Mantra-wise Mala Progress v2.7
 ===================================== */
-
-.counter-card {
-    position: relative;
+.mala-card {
+    border-color: #ffd6b3;
+    background: linear-gradient(135deg, #fffaf5, #ffffff);
 }
 
-.tap-btn {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    will-change: transform;
-}
-
-.tap-btn > * {
-    position: relative;
-    z-index: 2;
-}
-
-/* Button bounce */
-.tap-btn.tap-animate {
-    animation: tap-button-pop 360ms ease-out;
-}
-
-@keyframes tap-button-pop {
-    0% {
-        transform: scale(1);
-    }
-
-    30% {
-        transform: scale(0.92);
-    }
-
-    65% {
-        transform: scale(1.06);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* Ripple circle */
-.tap-btn::after {
-    content: "";
-    position: absolute;
-    z-index: 1;
-    left: 50%;
-    top: 50%;
-    width: 24px;
-    height: 24px;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
-}
-
-.tap-btn.tap-animate::after {
-    animation: tap-ripple 520ms ease-out;
-}
-
-@keyframes tap-ripple {
-    0% {
-        opacity: 0.85;
-        transform: translate(-50%, -50%) scale(0);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(15);
-    }
-}
-
-/* Floating +1 */
-.tap-floating-plus {
-    position: absolute;
-    z-index: 15;
+.mala-progress-text {
     color: var(--primary-dark);
-    font-size: 31px;
-    font-weight: 900;
-    line-height: 1;
-    pointer-events: none;
-    text-shadow: 0 3px 10px rgba(255, 111, 0, 0.22);
-    transform: translate(-50%, -50%);
-    animation: floating-plus 750ms ease-out forwards;
+    font-size: 20px;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
-@keyframes floating-plus {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -20%) scale(0.7);
-    }
+.mala-progress-track {
+    height: 14px;
+}
 
-    20% {
-        opacity: 1;
-    }
+.mala-progress-fill {
+    background: linear-gradient(90deg, #ff6f00, #ffb300);
+    box-shadow: 0 0 10px rgba(255, 111, 0, 0.2);
+}
 
-    60% {
-        opacity: 1;
-        transform: translate(-50%, -130%) scale(1.2);
-    }
+.mala-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
 
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -240%) scale(1.35);
+.mala-stats > div {
+    padding: 13px 12px;
+    text-align: center;
+    background: var(--primary-soft);
+    border: 1px solid #ffd8b8;
+    border-radius: 14px;
+}
+
+.mala-stats span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mala-stats strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--primary-dark);
+    font-size: 25px;
+    line-height: 1;
+}
+
+@media (max-width: 360px) {
+    .mala-progress-text {
+        font-size: 17px;
     }
 }
