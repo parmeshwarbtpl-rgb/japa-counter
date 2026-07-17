@@ -17,6 +17,7 @@ const APP_SHELL = [
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
+    "./custom-mantras.js?v=282",
 ];
 
 self.addEventListener("install", event => {
