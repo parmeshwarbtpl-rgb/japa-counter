@@ -1121,3 +1121,130 @@ input[type="number"] {
         font-size: 17px;
     }
 }
+/* =====================================
+   Custom Mantra Manager
+===================================== */
+
+.custom-mantra-card h3 {
+    margin-top: 4px;
+}
+
+.custom-mantra-form {
+    margin-top: 16px;
+}
+
+.custom-mantra-form > label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.custom-mantra-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.custom-mantra-input-row input {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 12px;
+    color: var(--text);
+    background: #fff;
+    border: 1px solid #d9dce2;
+    border-radius: 12px;
+    font: inherit;
+}
+
+.custom-mantra-input-row input:focus {
+    outline: 3px solid rgba(255, 111, 0, 0.15);
+    border-color: var(--primary);
+}
+
+.custom-mantra-input-row .primary-btn {
+    min-width: 82px;
+}
+
+#customMantraHelp[data-type="error"] {
+    color: var(--danger);
+}
+
+#customMantraHelp[data-type="success"] {
+    color: var(--success);
+}
+
+.custom-mantra-list {
+    display: grid;
+    gap: 9px;
+    margin-top: 14px;
+}
+
+.custom-mantra-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 11px;
+    background: #fffaf5;
+    border: 1px solid #ffe0c2;
+    border-radius: 12px;
+}
+
+.custom-mantra-name {
+    min-width: 0;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.custom-mantra-use,
+.custom-mantra-delete {
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.custom-mantra-use {
+    color: var(--primary-dark);
+    background: #fff;
+    border: 1px solid #ffcc9a;
+}
+
+.custom-mantra-delete {
+    color: var(--danger);
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+}
+
+.custom-mantra-empty {
+    margin: 0;
+    padding: 11px 12px;
+    color: var(--muted);
+    background: #f7f8fa;
+    border-radius: 11px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+@media (max-width: 390px) {
+    .custom-mantra-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-mantra-input-row .primary-btn {
+        width: 100%;
+    }
+
+    .custom-mantra-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .custom-mantra-delete {
+        grid-column: 1 / -1;
+    }
+}
