@@ -1,4 +1,6 @@
-const CACHE_NAME = "naam-jaap-counter-v2-8-1-radha-mantra";
+const CACHE_NAME =
+    "naam-jaap-counter-v2-8-2-custom-mantras";
+
 const APP_SHELL = [
     "./",
     "./index.html",
