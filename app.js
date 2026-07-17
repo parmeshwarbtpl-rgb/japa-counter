@@ -283,7 +283,7 @@ async function loadDashboard(options = {}) {
             : dashboardState.mantra;
         const payload = await getDashboard(requestedMantra, offlineLocalDateKey());
         const summary = await pendingSummary();
-        const pending = pendingCountsForMantra(summary);
+        const pending = pendingCountsForMantra(summary, requestedMantra);
         updateDashboard(mergeServerDashboardWithPending(
             payload,
             pending.today,
@@ -487,11 +487,19 @@ function handleTap(event) {
 }
 
 async function handleMantraChange() {
-    const nextMantra = elements.mantraSelect.value;
+    const nextMantra = String(elements.mantraSelect.value || "").normalize("NFC").trim();
     const previousState = { ...dashboardState };
 
+    if (!nextMantra || nextMantra === dashboardState.mantra) return;
+
+    elements.mantraSelect.disabled = true;
+
     try {
+        // Preserve the old mantra dashboard before switching keys.
         await cacheDashboard();
+
+        // Show the selected mantra's own device cache immediately. A mantra
+        // without a cache starts at zero instead of inheriting today's total.
         await loadLocalDashboard(nextMantra);
 
         await offlineQueueMantra({
@@ -502,16 +510,33 @@ async function handleMantraChange() {
         });
 
         historyLoaded = false;
-        showToast(navigator.onLine && isAuthenticated()
-            ? "Mantra selected; loading its separate count…"
-            : "Mantra selected offline.", "success");
+
+        if (navigator.onLine && isAuthenticated()) {
+            setConnectionStatus("loading", "Loading selected mantra count…");
+            const synced = await flushOfflineQueue();
+
+            if (synced) {
+                await loadDashboard({
+                    mantra: nextMantra,
+                    showError: false,
+                });
+                showToast("Separate mantra count loaded.", "success");
+            } else {
+                showToast("Mantra selected. Its count is saved locally and will sync automatically.", "info", 4500);
+            }
+        } else {
+            showToast("Mantra selected offline.", "success");
+            await refreshPendingStatus();
+        }
+
         if (appSettings.voiceEnabled) speakMantra(nextMantra);
-        await refreshPendingStatus();
-        if (navigator.onLine && isAuthenticated()) scheduleQueueSync(100);
     } catch (error) {
-        console.error("Mantra queue failed:", error);
+        console.error("Mantra change failed:", error);
         updateDashboard(previousState);
-        showToast("Mantra could not be changed on this device.", "error", 5000);
+        await cacheDashboard();
+        showToast("Mantra could not be changed. Previous count restored.", "error", 5000);
+    } finally {
+        elements.mantraSelect.disabled = false;
     }
 }
 

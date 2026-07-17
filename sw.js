@@ -1,17 +1,17 @@
-const CACHE_NAME = "naam-jaap-counter-v2-7-0-mantra-mala";
+const CACHE_NAME = "naam-jaap-counter-v2-8-0-mantra-isolation";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=270",
-    "./config.js?v=270",
-    "./offline.js?v=270",
-    "./api.js?v=270",
-    "./auth.js?v=270",
-    "./settings.js?v=270",
-    "./history.js?v=270",
-    "./ui.js?v=270",
-    "./reminder.js?v=270",
-    "./app.js?v=270",
+    "./style.css?v=280",
+    "./config.js?v=280",
+    "./offline.js?v=280",
+    "./api.js?v=280",
+    "./auth.js?v=280",
+    "./settings.js?v=280",
+    "./history.js?v=280",
+    "./ui.js?v=280",
+    "./reminder.js?v=280",
+    "./app.js?v=280",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
