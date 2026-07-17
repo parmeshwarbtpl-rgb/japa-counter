@@ -334,5 +334,79 @@
     <script src="ui.js?v=281"></script>
     <script src="reminder.js?v=281"></script>
     <script src="app.js?v=281"></script>
+    NAAM JAAP COUNTER v2.8.2 — CUSTOM MANTRA FACILITY
+=================================================
+
+This patch lets each signed-in user add and remove custom mantra names on the current device.
+The existing backend continues to store counting separately by Google User + Mantra + Date.
+No MP3 file is needed. Existing browser Text-to-Speech reads the custom mantra text.
+
+1) index.html — add this section inside Settings, before the Jaap Reminder card:
+
+<section class="card custom-mantra-card" aria-labelledby="customMantraTitle">
+    <p class="eyebrow">My Mantras</p>
+    <h3 id="customMantraTitle">Add Your Own Mantra</h3>
+    <p class="field-help">MP3 की जरूरत नहीं है। Browser Hindi voice mantra text बोलेगी।</p>
+
+    <form id="customMantraForm" class="custom-mantra-form">
+        <label for="customMantraInput">Mantra text</label>
+        <div class="custom-mantra-input-row">
+            <input
+                id="customMantraInput"
+                type="text"
+                maxlength="120"
+                autocomplete="off"
+                placeholder="जैसे: जय श्री कृष्ण"
+            >
+            <button id="addCustomMantraBtn" class="primary-btn" type="submit">Add</button>
+        </div>
+    </form>
+
+    <p id="customMantraHelp" class="field-help" data-type="info">
+        Custom mantra की counting भी अलग daily, lifetime और mala count में रहेगी।
+    </p>
+
+    <div id="customMantraList" class="custom-mantra-list" aria-live="polite"></div>
+</section>
+
+2) index.html — load the new file AFTER app.js:
+
+<script src="app.js?v=282"></script>
+<script src="custom-mantras.js?v=282"></script>
+
+Change all existing ?v=281 references in index.html to ?v=282.
+
+3) style.css — add the CSS from CUSTOM_MANTRA_STYLE.css at the end.
+
+4) sw.js:
+
+Change cache name to:
+const CACHE_NAME = "naam-jaap-counter-v2-8-2-custom-mantras";
+
+Change all ?v=281 entries to ?v=282 and add this to APP_SHELL:
+"./custom-mantras.js?v=282",
+
+5) config.js — optional but recommended:
+APP_VERSION: "2.8.2-custom-mantras"
+
+6) Upload these files to GitHub:
+- index.html
+- style.css
+- sw.js
+- config.js (if updated)
+- custom-mantras.js (new)
+
+7) Commit message:
+feat: add user custom mantra facility
+
+8) Clear old PWA cache only after pending Sync_Operations are DONE.
+
+IMPORTANT
+---------
+- Custom mantra names are stored per Google user on the current device.
+- Counts continue to sync to Google Sheets and remain user + mantra isolated.
+- Deleting a custom mantra only removes it from the dropdown; old counting is not deleted.
+- For custom mantra lists to appear automatically on every device, a future User_Mantras cloud sheet/API module is required.
+
 </body>
 </html>
