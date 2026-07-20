@@ -1,6 +1,6 @@
 // Public frontend configuration for Naam Jaap Counter.
-// Google OAuth Client IDs are public identifiers;
-// never place a client secret here.
+// Google OAuth Client IDs are public identifiers.
+// Never place a client secret in this file.
 
 window.APP_CONFIG = Object.freeze({
     API_URL:
@@ -10,5 +10,5 @@ window.APP_CONFIG = Object.freeze({
         "205720505540-ncjatpfsvr91pcebl9mkd5obum3cjf62.apps.googleusercontent.com",
 
     APP_VERSION:
-        "2.8.2-custom-mantras"
+        "2.8.3-owned-oauth-client"
 });
