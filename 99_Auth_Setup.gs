@@ -6,22 +6,33 @@
  * 4. Deploy a NEW Web App version.
  */
 function setupSecureAuthentication() {
-  var googleClientId = '984438160673-ru9ed5qrbh4hrrl63lpliaakn6da6i87.apps.googleusercontent.com';
+  var googleClientId =
+    '205720505540-ncjatpfsvr91pcebl9mkd5obum3cjf62.apps.googleusercontent.com';
 
-  if (googleClientId.indexOf('PASTE_YOUR') !== -1) {
-    throw new Error('Paste the Google Web Client ID into 99_Auth_Setup.gs first.');
+  googleClientId = String(googleClientId || '').trim();
+
+  if (
+    !googleClientId ||
+    googleClientId.indexOf('PASTE_YOUR') !== -1 ||
+    !googleClientId.endsWith('.apps.googleusercontent.com')
+  ) {
+    throw new Error(
+      '205720505540-ncjatpfsvr91pcebl9mkd5obum3cjf62.apps.googleusercontent.com'
+    );
   }
 
-  PropertiesService.getScriptProperties().setProperty(
-    'GOOGLE_CLIENT_ID',
-    googleClientId
-  );
+  PropertiesService
+    .getScriptProperties()
+    .setProperty('GOOGLE_CLIENT_ID', googleClientId);
 
   authEnsureAuditSheets_();
   authEnsureOfflineSyncSheet_();
-  Logger.log('Secure authentication is configured. Deploy a new Web App version.');
-}
 
+  Logger.log(
+    'Secure authentication configured with Client ID: ' +
+    googleClientId
+  );
+}
 /** Optional: restrict login to one Google Workspace domain. */
 function setAllowedEmailDomain() {
   var domain = ''; // Example: example.com. Leave empty to allow any Google account.
