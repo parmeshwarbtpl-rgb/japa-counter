@@ -1,6 +1,5 @@
 const CACHE_NAME =
-    "naam-jaap-counter-v2-8-2-custom-mantras";
-
+    "naam-jaap-counter-v2-8-3-owned-oauth-client";
 const APP_SHELL = [
     "./",
     "./index.html",
