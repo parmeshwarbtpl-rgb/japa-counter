@@ -157,26 +157,10 @@
                 <p id="goalJaapText" class="goal-jaap-text">0 / 108 जाप</p>
                 <p id="goalRemaining" class="goal-remaining">Remaining: 1 माला</p>
             </section>
-<section class="card bhajan-card" aria-labelledby="bhajanTitle">
-    <p class="eyebrow">Devotional Audio</p>
-    <h3 id="bhajanTitle">Bhajan सुनें</h3>
-
-    <p class="field-help">
-        भजन की MP3 नए tab में खोलने के लिए नीचे button दबाएँ।
-    </p>
-
-    <button
-        class="primary-btn full-width"
-        type="button"
-        onclick="window.open('https://parmeshwarbtpl-rgb.github.io/japa-counter/temple-music.mp3', '_blank', 'noopener,noreferrer')"
-    >
-        🎵 Open Bhajan MP3
-    </button>
-</section>
-            <section class="card bhajan-card" aria-labelledby="bhajanTitle">
+            <section class="card bhajan-card" aria-labelledby="youtubeBhajanTitle">
     <p class="eyebrow">Devotional Audio</p>
 
-    <h3 id="bhajanTitle">भजन सुनें</h3>
+    <h3 id="youtubeBhajanTitle">भजन सुनें</h3>
 
     <p class="field-help">
         हमारे YouTube channel पर भजन सुनने के लिए नीचे क्लिक करें।
@@ -194,10 +178,15 @@
         ▶️ YouTube पर भजन सुनें
     </button>
 </section>
-            <!-- Daily Mala Goal section यहाँ खत्म होगा -->
 
-<section class="card bhajan-card" aria-labelledby="bhajanTitle">
-    ...
+<section class="card action-buttons" aria-label="Reset counter actions">
+    <button id="resetTodayBtn" class="secondary-btn" type="button">
+        Reset This Mantra Today
+    </button>
+
+    <button id="resetAllBtn" class="danger-btn" type="button">
+        Reset This Mantra Lifetime
+    </button>
 </section>
 
 <section class="card action-buttons" aria-label="Reset counter actions">
