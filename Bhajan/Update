@@ -1,0 +1,20 @@
+Naam Jaap Counter v2.9.1 — Background Temple Music
+
+Upload/replace these files in the GitHub repository root:
+1. index.html
+2. config.js
+3. sw.js
+4. background-music.js
+5. background-music.css
+6. temple-music.mp3
+
+Important:
+- Upload all six files before testing, preferably in the same commit.
+- Do not rename temple-music.mp3.
+- Commit message: feat: add background temple music
+- Wait 2–5 minutes for GitHub Pages.
+- Open the app directly in Chrome, then use Ctrl+F5 or clear the PWA cache once.
+- Open Settings → Background Temple Music → Start Music.
+- Browser rules require one user tap before audio can play.
+
+No Apps Script redeployment is required. This feature is frontend-only.
