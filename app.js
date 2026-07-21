@@ -14,6 +14,14 @@ const elements = {
     targetPercent: document.getElementById("targetPercent"),
     targetProgress: document.getElementById("targetProgress"),
     progressTrack: document.querySelector(".target-card .progress-track"),
+    goalJaapText: document.getElementById("goalJaapText"),
+    goalRemaining: document.getElementById("goalRemaining"),
+    goalMantraLabel: document.getElementById("goalMantraLabel"),
+    goalSettingsMantra: document.getElementById("goalSettingsMantra"),
+    malaGoalForm: document.getElementById("malaGoalForm"),
+    malaGoalInput: document.getElementById("malaGoalInput"),
+    saveMalaGoalButton: document.getElementById("saveMalaGoalBtn"),
+    malaGoalHelp: document.getElementById("malaGoalHelp"),
     malaProgressText: document.getElementById("malaProgressText"),
     malaProgress: document.getElementById("malaProgress"),
     malaProgressTrack: document.querySelector(".mala-progress-track"),
@@ -32,7 +40,6 @@ const elements = {
     autoSpeakEnabled: document.getElementById("autoSpeakEnabled"),
     voiceSelect: document.getElementById("voiceSelect"),
     voiceHelp: document.getElementById("voiceHelp"),
-    dailyTargetInput: document.getElementById("dailyTargetInput"),
     testVoiceButton: document.getElementById("testVoiceBtn"),
     installButton: document.getElementById("installAppBtn"),
     installHelp: document.getElementById("installHelp"),
@@ -53,6 +60,9 @@ let dashboardState = {
     todayMalas: 0,
     lifetimeMalas: 0,
     malasCompleted: 0,
+    goalMalas: 1,
+    goalTargetCount: 108,
+    goalCompleted: false,
 };
 let historyLoaded = false;
 let deferredInstallPrompt = null;
@@ -65,6 +75,64 @@ const TAP_RETRY_DELAY_MS = 5000;
 let queueSyncTimer = null;
 let queueSyncPromise = null;
 let lastQueueToastAt = 0;
+
+const MALA_GOAL_CACHE_KEY = "naam-jaap-mala-goals-v1";
+const MALA_GOAL_MAX = 10000;
+
+function normalizeMantraText(value) {
+    return String(value || "").normalize("NFC").trim();
+}
+
+function readMalaGoalCache() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(MALA_GOAL_CACHE_KEY) || "{}");
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_error) {
+        return {};
+    }
+}
+
+function malaGoalCacheKey(userId, mantra) {
+    return `${String(userId || "")}:${encodeURIComponent(normalizeMantraText(mantra))}`;
+}
+
+function getCachedMalaGoal(userId, mantra) {
+    const cache = readMalaGoalCache();
+    const value = Number.parseInt(cache[malaGoalCacheKey(userId, mantra)], 10);
+    return Number.isFinite(value) && value >= 1
+        ? Math.min(value, MALA_GOAL_MAX)
+        : 1;
+}
+
+function cacheMalaGoal(userId, mantra, goalMalas) {
+    if (!userId || !mantra) return;
+    const safeGoal = Math.max(1, Math.min(MALA_GOAL_MAX, Number.parseInt(goalMalas, 10) || 1));
+    const cache = readMalaGoalCache();
+    cache[malaGoalCacheKey(userId, mantra)] = safeGoal;
+    localStorage.setItem(MALA_GOAL_CACHE_KEY, JSON.stringify(cache));
+}
+
+function goalCompletionKey() {
+    return [
+        "naam-jaap-goal-complete",
+        currentUserId(),
+        offlineLocalDateKey(),
+        encodeURIComponent(normalizeMantraText(dashboardState.mantra)),
+        dashboardState.goalMalas,
+    ].join(":");
+}
+
+function showDailyMalaGoalCompletion() {
+    const key = goalCompletionKey();
+    if (localStorage.getItem(key) === "1") return;
+    localStorage.setItem(key, "1");
+    showToast(
+        `🎯 आज का ${dashboardState.goalMalas} माला लक्ष्य पूर्ण हुआ — ${dashboardState.mantra}`,
+        "success",
+        6500
+    );
+    if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 260]);
+}
 
 function unwrapDashboardPayload(payload) {
     if (!payload || typeof payload !== "object") return {};
@@ -101,6 +169,19 @@ function normalizeDashboard(payload) {
         overallToday: data.overallToday ?? null,
         overallLifetime: data.overallLifetime ?? null,
         localDate: String(data.localDate || offlineLocalDateKey()),
+        goalMalas: Math.max(1, Number.parseInt(
+            data.goalMalas ?? getCachedMalaGoal(currentUserId(), mantra),
+            10
+        ) || 1),
+        goalTargetCount: Math.max(108, Number(
+            data.goalTargetCount ?? data.targetJaap ?? (
+                Math.max(1, Number.parseInt(
+                    data.goalMalas ?? getCachedMalaGoal(currentUserId(), mantra),
+                    10
+                ) || 1) * malaSize
+            )
+        )),
+        goalCompleted: Boolean(data.goalCompleted),
     };
 }
 
@@ -123,8 +204,10 @@ function updateDashboard(payload, options = {}) {
     }
 
     elements.mantraSelect.value = dashboardState.mantra;
+    cacheMalaGoal(currentUserId(), dashboardState.mantra, dashboardState.goalMalas);
     updateMalaProgress();
     updateTargetProgress();
+    renderMalaGoalSettings();
 
     if (options.animate) {
         elements.counter.classList.remove("pulse");
@@ -167,14 +250,44 @@ function showMalaCompletion(completed = 1) {
 }
 
 function updateTargetProgress() {
-    const target = Math.max(1, appSettings.dailyTarget);
-    const percent = Math.min(100, Math.round((dashboardState.today / target) * 100));
+    const malaSize = Math.max(1, Number(dashboardState.malaSize || 108));
+    const goalMalas = Math.max(1, Number.parseInt(dashboardState.goalMalas, 10) || 1);
+    const targetJaap = goalMalas * malaSize;
+    const todayJaap = Math.max(0, Number(dashboardState.today || 0));
+    const completedMalas = Math.floor(todayJaap / malaSize);
+    const percent = Math.min(100, Math.round((todayJaap / targetJaap) * 100));
+    const remainingJaap = Math.max(0, targetJaap - todayJaap);
+    const remainingMalas = Math.floor(remainingJaap / malaSize);
+    const remainingPart = remainingJaap % malaSize;
 
-    elements.targetCurrent.textContent = dashboardState.today.toLocaleString("en-IN");
-    elements.targetTotal.textContent = target.toLocaleString("en-IN");
+    dashboardState.goalMalas = goalMalas;
+    dashboardState.goalTargetCount = targetJaap;
+    dashboardState.goalCompleted = todayJaap >= targetJaap;
+
+    elements.targetCurrent.textContent = Math.min(completedMalas, goalMalas).toLocaleString("en-IN");
+    elements.targetTotal.textContent = goalMalas.toLocaleString("en-IN");
     elements.targetPercent.textContent = `${percent}%`;
     elements.targetProgress.style.width = `${percent}%`;
     elements.progressTrack.setAttribute("aria-valuenow", String(percent));
+
+    if (elements.goalMantraLabel) {
+        elements.goalMantraLabel.textContent = dashboardState.mantra;
+    }
+    if (elements.goalJaapText) {
+        elements.goalJaapText.textContent = `${todayJaap.toLocaleString("en-IN")} / ${targetJaap.toLocaleString("en-IN")} जाप`;
+    }
+    if (elements.goalRemaining) {
+        if (remainingJaap === 0) {
+            elements.goalRemaining.textContent = "आज का लक्ष्य पूर्ण हुआ";
+            elements.goalRemaining.dataset.complete = "true";
+        } else {
+            const parts = [];
+            if (remainingMalas) parts.push(`${remainingMalas.toLocaleString("en-IN")} माला`);
+            if (remainingPart) parts.push(`${remainingPart.toLocaleString("en-IN")} जाप`);
+            elements.goalRemaining.textContent = `Remaining: ${parts.join(" ")}`;
+            elements.goalRemaining.dataset.complete = "false";
+        }
+    }
 }
 
 function currentUserId() {
@@ -219,6 +332,8 @@ async function loadLocalDashboard(mantra = "") {
             currentMalaCount: 0,
             todayMalas: 0,
             lifetimeMalas: 0,
+            goalMalas: getCachedMalaGoal(userId, fallbackMantra),
+            goalTargetCount: getCachedMalaGoal(userId, fallbackMantra) * 108,
         });
         dashboardLocalDate = offlineLocalDateKey();
         return false;
@@ -447,6 +562,8 @@ function handleTap(event) {
 
     const previousMalas = Math.max(0, Number(dashboardState.todayMalas || 0));
     const malaSize = Math.max(1, Number(dashboardState.malaSize || 108));
+    const goalTargetCount = Math.max(malaSize, Number(dashboardState.goalTargetCount || dashboardState.goalMalas * malaSize || malaSize));
+    const wasGoalComplete = dashboardState.today >= goalTargetCount;
     const nextToday = dashboardState.today + 1;
     const nextLifetime = dashboardState.lifetime + 1;
 
@@ -462,7 +579,10 @@ function handleTap(event) {
     updateDashboard(dashboardState, { animate: true });
     historyLoaded = false;
 
-    if (dashboardState.todayMalas > previousMalas) {
+    const goalCompletedNow = !wasGoalComplete && dashboardState.today >= goalTargetCount;
+    if (goalCompletedNow) {
+        showDailyMalaGoalCompletion();
+    } else if (dashboardState.todayMalas > previousMalas) {
         showMalaCompletion(dashboardState.todayMalas - previousMalas);
     }
 
@@ -556,6 +676,7 @@ async function handleResetToday() {
         const payload = await resetToday(dashboardState.mantra, offlineLocalDateKey());
         updateDashboard(payload);
         dashboardLocalDate = offlineLocalDateKey();
+        localStorage.removeItem(goalCompletionKey());
         await cacheDashboard();
         historyLoaded = false;
         showToast("This mantra's today count has been reset.", "success");
@@ -585,6 +706,7 @@ async function handleResetAll() {
     try {
         const payload = await resetAll(dashboardState.mantra, offlineLocalDateKey());
         updateDashboard(payload);
+        localStorage.removeItem(goalCompletionKey());
         await cacheDashboard();
         historyLoaded = false;
         showToast("This mantra's lifetime count has been reset.", "success");
@@ -674,6 +796,7 @@ function renderHistory(entries) {
             MANTRA_CHANGE: "ॐ",
             RESET_TODAY: "↺",
             RESET_ALL: "!",
+            GOAL_UPDATE: "🎯",
         };
         badge.textContent = actionLabels[entry.action] || "+";
 
@@ -771,11 +894,20 @@ function speakMantra(text) {
     window.speechSynthesis.speak(utterance);
 }
 
+function renderMalaGoalSettings() {
+    if (elements.goalSettingsMantra) {
+        elements.goalSettingsMantra.textContent = dashboardState.mantra;
+    }
+    if (elements.malaGoalInput && document.activeElement !== elements.malaGoalInput) {
+        elements.malaGoalInput.value = String(dashboardState.goalMalas || 1);
+    }
+}
+
 function renderSettings() {
     elements.voiceEnabled.checked = appSettings.voiceEnabled;
     elements.autoSpeakEnabled.checked = appSettings.autoSpeakEnabled;
     elements.voiceSelect.value = appSettings.selectedVoiceURI;
-    elements.dailyTargetInput.value = String(appSettings.dailyTarget);
+    renderMalaGoalSettings();
     updateSettingsAvailability();
     updateTargetProgress();
 }
@@ -797,7 +929,54 @@ function persistSettings(partial, toastMessage) {
     }
 }
 
+async function handleSaveMalaGoal(event) {
+    event.preventDefault();
+
+    const goalMalas = Number.parseInt(elements.malaGoalInput.value, 10);
+    if (!Number.isFinite(goalMalas) || goalMalas < 1 || goalMalas > MALA_GOAL_MAX) {
+        elements.malaGoalInput.value = String(dashboardState.goalMalas || 1);
+        showToast(`Goal must be between 1 and ${MALA_GOAL_MAX.toLocaleString("en-IN")} malas.`, "error");
+        return;
+    }
+
+    if (!navigator.onLine || !isAuthenticated()) {
+        showToast("Internet and Google sign-in are required to save a goal.", "error", 4500);
+        return;
+    }
+
+    if (!(await syncQueueBeforeCriticalAction())) {
+        showToast("Saved offline counts must sync before changing the goal.", "error", 4500);
+        return;
+    }
+
+    setButtonBusy(elements.saveMalaGoalButton, true, "Saving…");
+    try {
+        const payload = await saveMalaGoal(
+            dashboardState.mantra,
+            goalMalas,
+            offlineLocalDateKey()
+        );
+        updateDashboard(payload);
+        await cacheDashboard();
+        historyLoaded = false;
+        showToast(`Daily goal saved: ${goalMalas} माला — ${dashboardState.mantra}`, "success", 4800);
+    } catch (error) {
+        console.error("Mala goal save failed:", error);
+        showToast(error.message || "Daily mala goal could not be saved.", "error", 5000);
+    } finally {
+        setButtonBusy(elements.saveMalaGoalButton, false);
+    }
+}
+
 function setupSettingsEvents() {
+    elements.malaGoalForm.addEventListener("submit", handleSaveMalaGoal);
+    document.querySelectorAll("[data-goal-malas]").forEach(button => {
+        button.addEventListener("click", () => {
+            elements.malaGoalInput.value = String(button.dataset.goalMalas || 1);
+            elements.malaGoalInput.focus();
+        });
+    });
+
     elements.voiceEnabled.addEventListener("change", () => {
         persistSettings({ voiceEnabled: elements.voiceEnabled.checked }, "Voice setting saved.");
         if (!appSettings.voiceEnabled && "speechSynthesis" in window) {
@@ -816,15 +995,6 @@ function setupSettingsEvents() {
         persistSettings({ selectedVoiceURI: elements.voiceSelect.value }, "Voice saved.");
     });
 
-    elements.dailyTargetInput.addEventListener("change", () => {
-        const target = Number.parseInt(elements.dailyTargetInput.value, 10);
-        if (!Number.isFinite(target) || target < 1) {
-            elements.dailyTargetInput.value = String(appSettings.dailyTarget);
-            showToast("Daily target must be at least 1.", "error");
-            return;
-        }
-        persistSettings({ dailyTarget: target }, "Daily target updated.");
-    });
 
     elements.testVoiceButton.addEventListener("click", () => {
         speakMantra(dashboardState.mantra || elements.mantraSelect.value);
@@ -845,12 +1015,14 @@ async function updateOnlineState() {
         if (elements.reconnectButton) elements.reconnectButton.hidden = true;
         elements.resetTodayButton.disabled = true;
         elements.resetAllButton.disabled = true;
+        elements.saveMalaGoalButton.disabled = true;
         await refreshPendingStatus();
         return;
     }
 
     elements.resetTodayButton.disabled = !isAuthenticated();
     elements.resetAllButton.disabled = !isAuthenticated();
+    elements.saveMalaGoalButton.disabled = !isAuthenticated();
 
     if (hasActiveAppSession() && !isAuthenticated()) {
         elements.offlineBanner.hidden = false;
@@ -946,6 +1118,7 @@ async function startAuthenticatedApp() {
 
     if (authState.offlineMode || !navigator.onLine || !isAuthenticated()) {
         await loadLocalDashboard();
+        renderMalaGoalSettings();
         await refreshPendingStatus();
         return;
     }
@@ -954,7 +1127,7 @@ async function startAuthenticatedApp() {
     const restoredLocal = await loadLocalDashboard("").catch(() => false);
     await loadDashboard({
         showError: false,
-        mantra: restoredLocal ? dashboardState.mantra : "",
+        mantra: restoredLocal ? dashboardState.mantra : elements.mantraSelect.value,
     });
     scheduleQueueSync(100);
 }

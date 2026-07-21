@@ -1,22 +1,22 @@
-const CACHE_NAME =
-    "naam-jaap-counter-v2-8-3-owned-oauth-client";
+const CACHE_NAME = "naam-jaap-counter-v2-9-0-daily-mala-goals";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=280",
-    "./config.js?v=280",
-    "./offline.js?v=280",
-    "./api.js?v=280",
-    "./auth.js?v=280",
-    "./settings.js?v=280",
-    "./history.js?v=280",
-    "./ui.js?v=280",
-    "./reminder.js?v=280",
-    "./app.js?v=280",
+    "./style.css?v=290",
+    "./mala-goal.css?v=290",
+    "./config.js?v=290",
+    "./offline.js?v=290",
+    "./api.js?v=290",
+    "./auth.js?v=290",
+    "./settings.js?v=290",
+    "./history.js?v=290",
+    "./ui.js?v=290",
+    "./reminder.js?v=290",
+    "./app.js?v=290",
+    "./custom-mantras.js?v=290",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
-    "./custom-mantras.js?v=282",
 ];
 
 self.addEventListener("install", event => {
@@ -42,7 +42,6 @@ self.addEventListener("fetch", event => {
 
     if (event.request.method !== "GET") return;
 
-    // Authentication, Google APIs, and Apps Script always use the network.
     if (requestUrl.origin !== self.location.origin) {
         event.respondWith(fetch(event.request));
         return;

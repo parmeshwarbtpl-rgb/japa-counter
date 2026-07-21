@@ -1,4 +1,4 @@
-// Authenticated Naam Jaap Counter API v2.3.
+// Authenticated Naam Jaap Counter API.
 // ID tokens are sent in a POST body, never in URL query parameters.
 
 const API_URL = window.APP_CONFIG?.API_URL || "";
@@ -18,7 +18,6 @@ async function api(action, params = {}, options = {}) {
         const response = await fetch(API_URL, {
             method: "POST",
             headers: {
-                // text/plain keeps this a CORS-simple request for Apps Script Web Apps.
                 "Content-Type": "text/plain;charset=UTF-8",
             },
             body: JSON.stringify({
@@ -39,7 +38,6 @@ async function api(action, params = {}, options = {}) {
         if (!response.ok) {
             throw new Error(`Server request failed (${response.status}).`);
         }
-
         if (!rawText.trim()) {
             throw new Error("Server returned an empty response.");
         }
@@ -64,11 +62,9 @@ async function api(action, params = {}, options = {}) {
         if (error.name === "AbortError") {
             throw new Error("Request timed out. Please check your internet connection.");
         }
-
         if (error instanceof TypeError) {
             throw new Error("Network error. Please check your internet connection.");
         }
-
         throw error;
     } finally {
         window.clearTimeout(timeoutId);
@@ -111,6 +107,15 @@ function resetToday(mantra, localDate = "") {
 
 function resetAll(mantra, localDate = "") {
     return api("resetAll", { mantra, selectedMantra: mantra, localDate });
+}
+
+function saveMalaGoal(mantra, goalMalas, localDate = "") {
+    return api("saveMalaGoal", {
+        mantra,
+        selectedMantra: mantra,
+        goalMalas,
+        localDate,
+    });
 }
 
 function getHistory(limit = 100) {
