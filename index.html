@@ -18,6 +18,167 @@
     <link rel="stylesheet" href="mala-goal.css?v=291">
     <link rel="stylesheet" href="background-music.css?v=291">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        a.primary-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .bhajan-modal[hidden] {
+            display: none;
+        }
+
+        .bhajan-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .bhajan-modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.58);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+        }
+
+        .bhajan-modal-box {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 540px);
+            max-height: min(82vh, 620px);
+            overflow-y: auto;
+            padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
+            border-radius: 24px 24px 0 0;
+            background: #ffffff;
+            box-shadow: 0 -14px 42px rgba(0, 0, 0, 0.28);
+            animation: bhajanSheetUp 0.24s ease-out;
+            box-sizing: border-box;
+        }
+
+        .bhajan-modal-handle {
+            width: 48px;
+            height: 5px;
+            margin: 0 auto 18px;
+            border-radius: 999px;
+            background: #d5d5d5;
+        }
+
+        .bhajan-modal-box h3 {
+            margin: 0 0 6px;
+            text-align: center;
+        }
+
+        .bhajan-modal-intro {
+            margin: 0 0 18px;
+            text-align: center;
+            color: #666666;
+            line-height: 1.5;
+        }
+
+        .bhajan-option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            min-height: 72px;
+            margin-bottom: 12px;
+            padding: 12px 15px;
+            border: 1px solid #e4e4e4;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #222222;
+            text-decoration: none;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        .bhajan-option:hover {
+            border-color: #ffb36b;
+            background: #fff8f1;
+        }
+
+        .bhajan-option:active {
+            transform: scale(0.985);
+        }
+
+        .bhajan-option:focus-visible {
+            outline: 3px solid rgba(255, 111, 0, 0.28);
+            outline-offset: 2px;
+        }
+
+        .bhajan-option-icon {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            flex: 0 0 46px;
+            place-items: center;
+            border-radius: 50%;
+            background: #f3f3f3;
+            font-size: 23px;
+        }
+
+        .bhajan-option-copy {
+            min-width: 0;
+        }
+
+        .bhajan-option strong,
+        .bhajan-option small {
+            display: block;
+        }
+
+        .bhajan-option strong {
+            font-size: 1rem;
+        }
+
+        .bhajan-option small {
+            margin-top: 4px;
+            color: #737373;
+            line-height: 1.35;
+        }
+
+        .bhajan-modal-close {
+            margin-top: 4px;
+        }
+
+        @keyframes bhajanSheetUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0.65;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (min-width: 700px) {
+            .bhajan-modal {
+                align-items: center;
+                padding: 20px;
+            }
+
+            .bhajan-modal-box {
+                border-radius: 24px;
+                padding-bottom: 20px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bhajan-modal-box {
+                animation: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <section id="authGate" class="auth-gate" aria-labelledby="authTitle">
@@ -158,20 +319,22 @@
                     <p id="goalRemaining" class="goal-remaining">Remaining: 1 माला</p>
                 </section>
 
-                <section class="card bhajan-card" aria-labelledby="youtubeBhajanTitle">
+                <section class="card bhajan-card" aria-labelledby="bhajanOptionsTitle">
                     <p class="eyebrow">Devotional Audio</p>
-                    <h3 id="youtubeBhajanTitle">भजन सुनें</h3>
+                    <h3 id="bhajanOptionsTitle">भजन सुनें</h3>
                     <p class="field-help">
-                        हमारे YouTube channel के mobile-friendly Videos page पर भजन सुनें।
+                        YouTube या YouTube Music में भजन सुनने के लिए विकल्प चुनें।
                     </p>
-                    <a
-    class="primary-btn full-width"
-    href="https://www.youtube.com/@unique_collection2026/videos"
-    aria-label="Open Bhajan videos in YouTube"
-    rel="noopener noreferrer"
->
-    ▶️ YouTube पर भजन सुनें
-</a>
+                    <button
+                        id="openBhajanOptions"
+                        class="primary-btn full-width"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-controls="bhajanOptionModal"
+                        aria-expanded="false"
+                    >
+                        🎵 भजन सुनने का विकल्प चुनें
+                    </button>
                 </section>
 
                 <section class="card action-buttons" aria-label="Reset counter actions">
@@ -456,6 +619,62 @@
         </nav>
     </div>
 
+
+    <div
+        id="bhajanOptionModal"
+        class="bhajan-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bhajanModalTitle"
+        aria-describedby="bhajanModalDescription"
+        hidden
+    >
+        <div class="bhajan-modal-overlay" data-close-bhajan-modal></div>
+
+        <div class="bhajan-modal-box">
+            <div class="bhajan-modal-handle" aria-hidden="true"></div>
+
+            <h3 id="bhajanModalTitle">भजन कहाँ सुनना है?</h3>
+            <p id="bhajanModalDescription" class="bhajan-modal-intro">
+                अपना पसंदीदा music option चुनें।
+            </p>
+
+            <a
+                class="bhajan-option"
+                href="https://www.youtube.com/@unique_collection2026/videos"
+                rel="noopener noreferrer"
+                data-bhajan-link
+            >
+                <span class="bhajan-option-icon" aria-hidden="true">▶️</span>
+                <span class="bhajan-option-copy">
+                    <strong>YouTube</strong>
+                    <small>हमारे channel के भजन videos खोलें</small>
+                </span>
+            </a>
+
+            <a
+                class="bhajan-option"
+                href="https://music.youtube.com/search?q=Unique%20Collection%202026%20Bhajan"
+                rel="noopener noreferrer"
+                data-bhajan-link
+            >
+                <span class="bhajan-option-icon" aria-hidden="true">🎵</span>
+                <span class="bhajan-option-copy">
+                    <strong>YouTube Music</strong>
+                    <small>YouTube Music में bhajan search खोलें</small>
+                </span>
+            </a>
+
+            <button
+                id="closeBhajanOptions"
+                class="secondary-btn full-width bhajan-modal-close"
+                type="button"
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
     <script src="config.js?v=291"></script>
@@ -470,5 +689,62 @@
     <script src="custom-mantras.js?v=291"></script>
     <audio id="templeBackgroundAudio" src="temple-music.mp3?v=291" preload="none" loop></audio>
     <script src="background-music.js?v=291"></script>
+
+    <script>
+        (() => {
+            const openButton = document.getElementById("openBhajanOptions");
+            const closeButton = document.getElementById("closeBhajanOptions");
+            const modal = document.getElementById("bhajanOptionModal");
+            const overlay = modal?.querySelector("[data-close-bhajan-modal]");
+            const optionLinks = modal?.querySelectorAll("[data-bhajan-link]") || [];
+            let previousActiveElement = null;
+
+            if (!openButton || !closeButton || !modal) {
+                return;
+            }
+
+            function openModal() {
+                previousActiveElement = document.activeElement;
+                modal.hidden = false;
+                openButton.setAttribute("aria-expanded", "true");
+                document.body.style.overflow = "hidden";
+
+                const firstOption = modal.querySelector("[data-bhajan-link]");
+                window.requestAnimationFrame(() => {
+                    firstOption?.focus();
+                });
+            }
+
+            function closeModal() {
+                modal.hidden = true;
+                openButton.setAttribute("aria-expanded", "false");
+                document.body.style.overflow = "";
+
+                if (previousActiveElement instanceof HTMLElement) {
+                    previousActiveElement.focus();
+                } else {
+                    openButton.focus();
+                }
+            }
+
+            openButton.addEventListener("click", openModal);
+            closeButton.addEventListener("click", closeModal);
+            overlay?.addEventListener("click", closeModal);
+
+            optionLinks.forEach((link) => {
+                link.addEventListener("click", () => {
+                    modal.hidden = true;
+                    openButton.setAttribute("aria-expanded", "false");
+                    document.body.style.overflow = "";
+                });
+            });
+
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape" && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
