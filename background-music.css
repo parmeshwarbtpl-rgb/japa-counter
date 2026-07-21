@@ -1,0 +1,84 @@
+/* Background temple music UI v2.9.1 */
+
+.background-music-card {
+    display: grid;
+    gap: 16px;
+}
+
+.music-heading-row {
+    align-items: center;
+}
+
+.music-volume-field {
+    margin: 0;
+}
+
+.music-volume-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.music-volume-label-row strong {
+    color: #9a3412;
+    font-variant-numeric: tabular-nums;
+}
+
+.music-volume-slider {
+    width: 100%;
+    accent-color: #f97316;
+    cursor: pointer;
+}
+
+.music-status {
+    margin: 0;
+}
+
+.music-status[data-type="success"] {
+    color: #15803d;
+}
+
+.music-status[data-type="error"] {
+    color: #b91c1c;
+}
+
+.music-floating-button {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    z-index: 45;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(249, 115, 22, 0.32);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 24px rgba(124, 45, 18, 0.18);
+    font-size: 21px;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.music-floating-button.is-playing {
+    background: #fff7ed;
+    border-color: rgba(249, 115, 22, 0.58);
+}
+
+.music-floating-button:focus-visible {
+    outline: 3px solid rgba(249, 115, 22, 0.32);
+    outline-offset: 3px;
+}
+
+#templeBackgroundAudio {
+    display: none;
+}
+
+@media (min-width: 760px) {
+    .music-floating-button {
+        right: max(24px, calc((100vw - 720px) / 2 - 62px));
+    }
+}

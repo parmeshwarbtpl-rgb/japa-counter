@@ -10,5 +10,5 @@ window.APP_CONFIG = Object.freeze({
         "205720505540-ncjatpfsvr91pcebl9mkd5obum3cjf62.apps.googleusercontent.com",
 
     APP_VERSION:
-        "2.9.0-daily-mala-goals"
+        "2.9.1-background-temple-music"
 });

@@ -9,13 +9,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <title>Naam Jaap Counter v2.x</title>
+    <title>Naam Jaap Counter v2.9.1</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=290" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=290">
-    <link rel="stylesheet" href="style.css?v=290">
-    <link rel="stylesheet" href="mala-goal.css?v=290">
+    <link rel="icon" href="icon-192.png?v=291" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=291">
+    <link rel="stylesheet" href="style.css?v=291">
+    <link rel="stylesheet" href="mala-goal.css?v=291">
+    <link rel="stylesheet" href="background-music.css?v=291">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -247,6 +248,45 @@
             </section>
 
 
+            <section class="card background-music-card" aria-labelledby="backgroundMusicTitle">
+                <div class="section-heading-row music-heading-row">
+                    <div>
+                        <p class="eyebrow">Peaceful Audio</p>
+                        <h3 id="backgroundMusicTitle">Background Temple Music</h3>
+                    </div>
+                    <label class="switch" aria-label="Enable background temple music">
+                        <input id="backgroundMusicEnabled" type="checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-field music-volume-field">
+                    <div class="music-volume-label-row">
+                        <label for="backgroundMusicVolume">Music Volume</label>
+                        <strong id="backgroundMusicVolumeText">20%</strong>
+                    </div>
+                    <input
+                        id="backgroundMusicVolume"
+                        class="music-volume-slider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value="20"
+                    >
+                </div>
+
+                <button id="backgroundMusicPlayPause" class="secondary-btn full-width" type="button">
+                    ▶ Start Music
+                </button>
+                <p id="backgroundMusicStatus" class="field-help music-status" data-type="info">
+                    Music is off. Tap Start Music to begin.
+                </p>
+                <p class="field-help">
+                    Browser autoplay rules require one tap before music can start. Music becomes softer while mantra voice is speaking.
+                </p>
+            </section>
+
             <section class="card goal-settings-card" aria-labelledby="malaGoalSettingsTitle">
                 <p class="eyebrow">Selected Mantra</p>
                 <h3 id="malaGoalSettingsTitle">Set Daily Mala Goal</h3>
@@ -367,12 +407,23 @@
 
             <section class="card about-card">
                 <p class="eyebrow">About</p>
-                <h3>Naam Jaap Counter v2.9.0</h3>
+                <h3>Naam Jaap Counter v2.9.1</h3>
                 <p>Frontend: HTML, CSS and Vanilla JavaScript</p>
                 <p>Backend: Google Apps Script and Google Sheets</p>
             </section>
         </section>
     </main>
+
+    <button
+        id="backgroundMusicFloatingButton"
+        class="music-floating-button"
+        type="button"
+        aria-label="Start background temple music"
+        aria-pressed="false"
+        title="Background temple music"
+    >
+        <span id="backgroundMusicFloatingIcon" aria-hidden="true">🔇</span>
+    </button>
 
     <nav class="bottom-nav" aria-label="Primary navigation">
         <button id="dashboardTab" class="nav-btn active" type="button" data-target="dashboard" aria-current="page">
@@ -392,15 +443,17 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="config.js?v=290"></script>
-    <script src="offline.js?v=290"></script>
-    <script src="api.js?v=290"></script>
-    <script src="auth.js?v=290"></script>
-    <script src="settings.js?v=290"></script>
-    <script src="history.js?v=290"></script>
-    <script src="ui.js?v=290"></script>
-    <script src="reminder.js?v=290"></script>
-    <script src="app.js?v=290"></script>
-    <script src="custom-mantras.js?v=290"></script>
+    <script src="config.js?v=291"></script>
+    <script src="offline.js?v=291"></script>
+    <script src="api.js?v=291"></script>
+    <script src="auth.js?v=291"></script>
+    <script src="settings.js?v=291"></script>
+    <script src="history.js?v=291"></script>
+    <script src="ui.js?v=291"></script>
+    <script src="reminder.js?v=291"></script>
+    <script src="app.js?v=291"></script>
+    <script src="custom-mantras.js?v=291"></script>
+    <audio id="templeBackgroundAudio" src="temple-music.mp3?v=291" preload="none" loop></audio>
+    <script src="background-music.js?v=291"></script>
 </body>
 </html>
