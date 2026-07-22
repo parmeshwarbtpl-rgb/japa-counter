@@ -1,14 +1,26 @@
-// Naam Jaap Counter v2.9.4 — local reminder with in-app alarm tone.
+// Naam Jaap Counter v2.9.5 — selectable Temple Bell and Morning Chime reminder tones.
 // Reminder settings stay on this device. No reminder data is sent to Google Sheets.
 
 const REMINDER_STORAGE_KEY = "naam-jaap-local-reminder-v1";
 const REMINDER_CHECK_INTERVAL_MS = 15000;
 const REMINDER_WINDOW_MINUTES = 5;
 
+const REMINDER_TONES = Object.freeze({
+    "temple-bell": Object.freeze({
+        label: "Temple Bell",
+        src: "./reminder-temple-bell.wav?v=295",
+    }),
+    "morning-chime": Object.freeze({
+        label: "Morning Chime",
+        src: "./reminder-morning-chime.wav?v=295",
+    }),
+});
+
 const DEFAULT_REMINDER = Object.freeze({
     enabled: false,
     time: "06:00",
     label: "समय हो गया है—नाम जप करें।",
+    tone: "temple-bell",
     toneVolume: 0.75,
     lastTriggeredDate: "",
 });
@@ -28,6 +40,7 @@ function reminderElements() {
         enabled: document.getElementById("reminderEnabled"),
         reminderTime: document.getElementById("reminderTime"),
         label: document.getElementById("reminderLabel"),
+        toneSelect: document.getElementById("reminderToneSelect"),
         toneVolume: document.getElementById("reminderToneVolume"),
         toneVolumeText: document.getElementById("reminderToneVolumeText"),
         toneAudio: document.getElementById("reminderToneAudio"),
@@ -44,6 +57,10 @@ function sanitizeReminderState(value = {}) {
         : DEFAULT_REMINDER.time;
     const label = String(value.label || DEFAULT_REMINDER.label).trim().slice(0, 80)
         || DEFAULT_REMINDER.label;
+    const requestedTone = String(value.tone || "").trim();
+    const tone = Object.prototype.hasOwnProperty.call(REMINDER_TONES, requestedTone)
+        ? requestedTone
+        : DEFAULT_REMINDER.tone;
     const rawToneVolume = Number(value.toneVolume);
     const toneVolume = Number.isFinite(rawToneVolume)
         ? Math.min(1, Math.max(0, rawToneVolume))
@@ -53,6 +70,7 @@ function sanitizeReminderState(value = {}) {
         enabled: Boolean(value.enabled),
         time,
         label,
+        tone,
         toneVolume,
         lastTriggeredDate: /^\d{4}-\d{2}-\d{2}$/.test(String(value.lastTriggeredDate || ""))
             ? String(value.lastTriggeredDate)
@@ -79,6 +97,21 @@ function saveReminderState(partial = {}) {
     return reminderState;
 }
 
+
+function setReminderTone(toneKey = reminderState.tone) {
+    const safeTone = Object.prototype.hasOwnProperty.call(REMINDER_TONES, toneKey)
+        ? toneKey
+        : DEFAULT_REMINDER.tone;
+    const audio = reminderElements().toneAudio;
+    const source = REMINDER_TONES[safeTone].src;
+
+    if (audio && audio.getAttribute("src") !== source) {
+        stopReminderTone({ resumeBackground: true });
+        audio.setAttribute("src", source);
+        audio.load();
+    }
+    return safeTone;
+}
 
 function setReminderToneVolume(value) {
     const volume = Math.min(1, Math.max(0, Number(value) || 0));
@@ -196,6 +229,10 @@ function renderReminderSettings() {
     els.enabled.checked = reminderState.enabled;
     els.reminderTime.value = reminderState.time;
     els.label.value = reminderState.label;
+    if (els.toneSelect) {
+        els.toneSelect.value = reminderState.tone;
+    }
+    setReminderTone(reminderState.tone);
     if (els.toneVolume) {
         els.toneVolume.value = String(Math.round(reminderState.toneVolume * 100));
     }
@@ -224,7 +261,8 @@ function renderReminderSettings() {
         minute: "2-digit",
         hour12: true,
     }).format(next);
-    els.status.textContent = `Next reminder: ${when} • ${permission === "granted" ? "notifications allowed" : "calendar fallback recommended"}`;
+    const toneLabel = REMINDER_TONES[reminderState.tone]?.label || "Alarm Tone";
+    els.status.textContent = `Next reminder: ${when} • ${toneLabel} • ${permission === "granted" ? "notifications allowed" : "calendar fallback recommended"}`;
 }
 
 async function requestReminderPermission() {
@@ -405,6 +443,14 @@ function bindReminderEvents() {
         saveReminderState({ label: els.label.value });
         renderReminderSettings();
         showReminderToast("Reminder message saved.", "success");
+    });
+
+    els.toneSelect?.addEventListener("change", async () => {
+        const tone = setReminderTone(els.toneSelect.value);
+        saveReminderState({ tone });
+        renderReminderSettings();
+        showReminderToast(`${REMINDER_TONES[tone].label} selected.`, "success");
+        await playReminderTone({ test: true });
     });
 
     els.toneVolume?.addEventListener("input", () => {

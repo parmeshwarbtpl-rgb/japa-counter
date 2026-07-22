@@ -1,0 +1,25 @@
+Naam Jaap Counter v2.9.5 — Selectable Reminder Tones
+
+Replace/upload these files in the GitHub repository root:
+1. reminder.js
+2. index.html
+3. config.js
+4. sw.js
+5. reminder-temple-bell.wav
+6. reminder-morning-chime.wav
+
+Optional cleanup:
+- The old reminder-tone.wav file is no longer used and may be deleted.
+
+Commit message:
+feat: add selectable temple bell and morning chime reminder tones v2.9.5
+
+Google Apps Script deployment is NOT required.
+
+Behavior:
+- Daily Reminder settings now include an Alarm Tone selector.
+- Temple Bell is the default tone.
+- Morning Chime can be selected and is saved on the device.
+- Changing the tone immediately plays a short test.
+- Custom audio works while the web app/PWA is open or still running.
+- Use Add to Phone Calendar for the most reliable alert when the app is fully closed.
