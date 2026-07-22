@@ -771,5 +771,65 @@
             });
         })();
     </script>
+    <script>
+    (() => {
+        const shareButton = document.getElementById("shareAppBtn");
+        const shareStatus = document.getElementById("shareAppStatus");
+
+        if (!shareButton) {
+            return;
+        }
+
+        const shareData = {
+            title: "Naam Jaap Counter",
+            text: "नाम जप, माला और daily goal track करने के लिए Naam Jaap Counter खोलें।",
+            url: "https://parmeshwarbtpl-rgb.github.io/japa-counter/"
+        };
+
+        async function copyShareLink() {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+
+                if (shareStatus) {
+                    shareStatus.textContent =
+                        "App link copy हो गया। अब इसे कहीं भी paste करके share करें।";
+                }
+            } catch (error) {
+                if (shareStatus) {
+                    shareStatus.textContent =
+                        "Share नहीं हो पाया। App link manually copy करें: " +
+                        shareData.url;
+                }
+            }
+        }
+
+        shareButton.addEventListener("click", async () => {
+            if (shareStatus) {
+                shareStatus.textContent = "";
+            }
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+
+                    if (shareStatus) {
+                        shareStatus.textContent = "App successfully share किया गया।";
+                    }
+
+                    return;
+                }
+
+                await copyShareLink();
+            } catch (error) {
+                // User ने share panel बंद किया है तो error message न दिखाएँ।
+                if (error?.name === "AbortError") {
+                    return;
+                }
+
+                await copyShareLink();
+            }
+        });
+    })();
+</script>
 </body>
 </html>
