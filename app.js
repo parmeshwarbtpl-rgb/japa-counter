@@ -1,4 +1,4 @@
-// Naam Jaap Counter v2.x application
+// Naam Jaap Counter v2.9.3 — selected mantra mala isolation
 
 const elements = {
     counter: document.getElementById("counter"),
@@ -68,6 +68,7 @@ let historyLoaded = false;
 let deferredInstallPrompt = null;
 let authenticatedAppStarted = false;
 let dashboardLocalDate = offlineLocalDateKey();
+let dashboardRequestSerial = 0;
 
 // Every tap is written to durable device storage before cloud sync.
 const TAP_SYNC_DELAY_MS = 650;
@@ -81,6 +82,18 @@ const MALA_GOAL_MAX = 10000;
 
 function normalizeMantraText(value) {
     return String(value || "").normalize("NFC").trim();
+}
+
+function sameMantraText(left, right) {
+    const first = normalizeMantraText(left);
+    const second = normalizeMantraText(right);
+    return Boolean(first && second && first === second);
+}
+
+function selectedMantraText() {
+    return normalizeMantraText(
+        elements.mantraSelect?.value || dashboardState?.mantra || ""
+    );
 }
 
 function readMalaGoalCache() {
@@ -144,49 +157,54 @@ function unwrapDashboardPayload(payload) {
         : payload;
 }
 
-function normalizeDashboard(payload) {
+function normalizeDashboard(payload, expectedMantra = "") {
     const data = unwrapDashboardPayload(payload);
-    const today = Number(
-        data.today ?? data.todayCount ?? data.daily ?? data.count ?? dashboardState.today ?? 0
-    );
-    const lifetime = Number(
-        data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total ?? dashboardState.lifetime ?? 0
-    );
-    const mantra = String(data.mantra ?? data.selectedMantra ?? dashboardState.mantra ?? "").trim();
+    const requestedMantra = normalizeMantraText(expectedMantra);
+    const responseMantra = normalizeMantraText(data.mantra ?? data.selectedMantra ?? "");
+    const stateMantra = normalizeMantraText(dashboardState.mantra);
+    const fallbackMantra = normalizeMantraText(elements.mantraSelect.options[0]?.value || "");
+    const mantra = requestedMantra || responseMantra || stateMantra || fallbackMantra;
+    const mayReuseState = !requestedMantra || sameMantraText(requestedMantra, stateMantra);
+
+    const todayValue = data.today ?? data.todayCount ?? data.daily ?? data.count;
+    const lifetimeValue = data.lifetime ?? data.life ?? data.lifetimeCount ?? data.total;
+    const today = Number(todayValue !== undefined
+        ? todayValue
+        : (mayReuseState ? dashboardState.today : 0));
+    const lifetime = Number(lifetimeValue !== undefined
+        ? lifetimeValue
+        : (mayReuseState ? dashboardState.lifetime : 0));
     const malaSize = Math.max(1, Number(data.malaSize ?? dashboardState.malaSize ?? 108));
     const safeToday = Number.isFinite(today) ? Math.max(0, today) : 0;
     const safeLifetime = Number.isFinite(lifetime) ? Math.max(0, lifetime) : 0;
+    const goalMalas = Math.max(1, Number.parseInt(
+        data.goalMalas ?? getCachedMalaGoal(currentUserId(), mantra),
+        10
+    ) || 1);
 
     return {
         today: safeToday,
         lifetime: safeLifetime,
-        mantra: mantra || elements.mantraSelect.options[0].value,
+        mantra,
         malaSize,
-        currentMalaCount: Math.max(0, Number(data.currentMalaCount ?? (safeToday % malaSize))),
-        todayMalas: Math.max(0, Number(data.todayMalas ?? Math.floor(safeToday / malaSize))),
-        lifetimeMalas: Math.max(0, Number(data.lifetimeMalas ?? Math.floor(safeLifetime / malaSize))),
+        // Mala values are always derived from this selected mantra's counts.
+        currentMalaCount: safeToday % malaSize,
+        todayMalas: Math.floor(safeToday / malaSize),
+        lifetimeMalas: Math.floor(safeLifetime / malaSize),
         malasCompleted: Math.max(0, Number(data.malasCompleted ?? 0)),
-        overallToday: data.overallToday ?? null,
-        overallLifetime: data.overallLifetime ?? null,
+        overallToday: null,
+        overallLifetime: null,
         localDate: String(data.localDate || offlineLocalDateKey()),
-        goalMalas: Math.max(1, Number.parseInt(
-            data.goalMalas ?? getCachedMalaGoal(currentUserId(), mantra),
-            10
-        ) || 1),
-        goalTargetCount: Math.max(108, Number(
-            data.goalTargetCount ?? data.targetJaap ?? (
-                Math.max(1, Number.parseInt(
-                    data.goalMalas ?? getCachedMalaGoal(currentUserId(), mantra),
-                    10
-                ) || 1) * malaSize
-            )
+        goalMalas,
+        goalTargetCount: Math.max(malaSize, Number(
+            data.goalTargetCount ?? data.targetJaap ?? (goalMalas * malaSize)
         )),
         goalCompleted: Boolean(data.goalCompleted),
     };
 }
 
 function updateDashboard(payload, options = {}) {
-    dashboardState = normalizeDashboard(payload);
+    dashboardState = normalizeDashboard(payload, options.expectedMantra || "");
 
     elements.counter.textContent = dashboardState.today.toLocaleString("en-IN");
     elements.today.textContent = dashboardState.today.toLocaleString("en-IN");
@@ -218,8 +236,19 @@ function updateDashboard(payload, options = {}) {
 
 function updateMalaProgress() {
     const malaSize = Math.max(1, Number(dashboardState.malaSize || 108));
-    const current = Math.max(0, Number(dashboardState.currentMalaCount || 0));
+    const selectedToday = Math.max(0, Number(dashboardState.today || 0));
+    const selectedLifetime = Math.max(0, Number(dashboardState.lifetime || 0));
+    const current = selectedToday % malaSize;
+    const todayMalas = Math.floor(selectedToday / malaSize);
+    const lifetimeMalas = Math.floor(selectedLifetime / malaSize);
     const percent = Math.min(100, Math.round((current / malaSize) * 100));
+
+    // Never use an overall/all-mantra total for the mala card.
+    dashboardState.currentMalaCount = current;
+    dashboardState.todayMalas = todayMalas;
+    dashboardState.lifetimeMalas = lifetimeMalas;
+    dashboardState.overallToday = null;
+    dashboardState.overallLifetime = null;
 
     if (elements.malaProgressText) {
         elements.malaProgressText.textContent = `${current.toLocaleString("en-IN")} / ${malaSize.toLocaleString("en-IN")}`;
@@ -230,12 +259,16 @@ function updateMalaProgress() {
     if (elements.malaProgressTrack) {
         elements.malaProgressTrack.setAttribute("aria-valuemax", String(malaSize));
         elements.malaProgressTrack.setAttribute("aria-valuenow", String(current));
+        elements.malaProgressTrack.setAttribute(
+            "aria-label",
+            `${dashboardState.mantra} current mala progress`
+        );
     }
     if (elements.todayMalas) {
-        elements.todayMalas.textContent = dashboardState.todayMalas.toLocaleString("en-IN");
+        elements.todayMalas.textContent = todayMalas.toLocaleString("en-IN");
     }
     if (elements.lifetimeMalas) {
-        elements.lifetimeMalas.textContent = dashboardState.lifetimeMalas.toLocaleString("en-IN");
+        elements.lifetimeMalas.textContent = lifetimeMalas.toLocaleString("en-IN");
     }
 }
 
@@ -320,10 +353,15 @@ function cacheDashboard() {
 async function loadLocalDashboard(mantra = "") {
     const userId = currentUserId();
     if (!userId) return false;
-    const requestedMantra = String(mantra || "");
+
+    const requestedMantra = normalizeMantraText(mantra || selectedMantraText());
     const cached = await offlineLoadDashboard(userId, requestedMantra);
-    if (!cached) {
-        const fallbackMantra = requestedMantra || dashboardState.mantra;
+    const validCache = cached && (
+        !requestedMantra || sameMantraText(cached.mantra, requestedMantra)
+    );
+
+    if (!validCache) {
+        const fallbackMantra = requestedMantra || selectedMantraText() || dashboardState.mantra;
         updateDashboard({
             today: 0,
             lifetime: 0,
@@ -334,12 +372,14 @@ async function loadLocalDashboard(mantra = "") {
             lifetimeMalas: 0,
             goalMalas: getCachedMalaGoal(userId, fallbackMantra),
             goalTargetCount: getCachedMalaGoal(userId, fallbackMantra) * 108,
-        });
+        }, { expectedMantra: fallbackMantra });
         dashboardLocalDate = offlineLocalDateKey();
         return false;
     }
+
+    const cacheMantra = requestedMantra || normalizeMantraText(cached.mantra);
     dashboardLocalDate = cached.localDate || offlineLocalDateKey();
-    updateDashboard(cached);
+    updateDashboard(cached, { expectedMantra: cacheMantra });
     return true;
 }
 
@@ -358,12 +398,29 @@ function pendingCountsForMantra(summary, mantra = dashboardState.mantra) {
     };
 }
 
-function mergeServerDashboardWithPending(payload, pendingToday = 0, pendingLifetime = pendingToday, preserveLocalMantra = false) {
-    const data = normalizeDashboard(payload);
-    const mantra = preserveLocalMantra ? dashboardState.mantra : data.mantra;
-    const sameMantra = String(data.mantra) === String(mantra);
-    const baseToday = sameMantra ? data.today : dashboardState.today;
-    const baseLifetime = sameMantra ? data.lifetime : dashboardState.lifetime;
+function mergeServerDashboardWithPending(
+    payload,
+    pendingToday = 0,
+    pendingLifetime = pendingToday,
+    selectedMantra = dashboardState.mantra,
+    preserveLocalCounts = false
+) {
+    const expectedMantra = normalizeMantraText(selectedMantra || dashboardState.mantra);
+    const rawData = unwrapDashboardPayload(payload);
+    const responseMantra = normalizeMantraText(rawData.mantra ?? rawData.selectedMantra ?? "");
+
+    if (responseMantra && expectedMantra && !sameMantraText(responseMantra, expectedMantra)) {
+        throw new Error("The server returned a different mantra dashboard.");
+    }
+
+    const data = normalizeDashboard(payload, expectedMantra);
+    const localMatches = sameMantraText(dashboardState.mantra, expectedMantra);
+    const baseToday = preserveLocalCounts && localMatches
+        ? dashboardState.today
+        : data.today;
+    const baseLifetime = preserveLocalCounts && localMatches
+        ? dashboardState.lifetime
+        : data.lifetime;
     const today = Math.max(0, Number(baseToday || 0) + Number(pendingToday || 0));
     const lifetime = Math.max(0, Number(baseLifetime || 0) + Number(pendingLifetime || 0));
     const malaSize = Math.max(1, Number(data.malaSize || dashboardState.malaSize || 108));
@@ -372,18 +429,30 @@ function mergeServerDashboardWithPending(payload, pendingToday = 0, pendingLifet
         ...data,
         today,
         lifetime,
-        mantra,
+        mantra: expectedMantra,
         malaSize,
         currentMalaCount: today % malaSize,
         todayMalas: Math.floor(today / malaSize),
         lifetimeMalas: Math.floor(lifetime / malaSize),
+        overallToday: null,
+        overallLifetime: null,
         malasCompleted: 0,
     };
 }
 
 async function loadDashboard(options = {}) {
+    const requestedMantra = normalizeMantraText(
+        options.mantra !== undefined
+            ? options.mantra
+            : selectedMantraText()
+    );
+
+    if (!requestedMantra) return;
+
+    const requestSerial = ++dashboardRequestSerial;
+
     if (!navigator.onLine || !isAuthenticated()) {
-        await loadLocalDashboard();
+        await loadLocalDashboard(requestedMantra);
         const summary = await pendingSummary();
         setConnectionStatus("offline", summary.count
             ? `Offline — ${summary.count} saved locally`
@@ -391,33 +460,48 @@ async function loadDashboard(options = {}) {
         return;
     }
 
-    setConnectionStatus("loading", "Syncing with Google Sheets…");
+    setConnectionStatus("loading", "Loading selected mantra from Google Sheets…");
     try {
-        const requestedMantra = options.mantra !== undefined
-            ? String(options.mantra || "")
-            : dashboardState.mantra;
         const payload = await getDashboard(requestedMantra, offlineLocalDateKey());
+
+        // A slower response for a previously selected mantra must never replace
+        // the currently selected mantra dashboard.
+        if (requestSerial !== dashboardRequestSerial) return;
+        if (!sameMantraText(selectedMantraText(), requestedMantra)) return;
+
+        const responseMantra = normalizeMantraText(
+            unwrapDashboardPayload(payload).mantra
+            ?? unwrapDashboardPayload(payload).selectedMantra
+            ?? ""
+        );
+        if (responseMantra && !sameMantraText(responseMantra, requestedMantra)) {
+            throw new Error("Selected mantra response mismatch.");
+        }
+
         const summary = await pendingSummary();
         const pending = pendingCountsForMantra(summary, requestedMantra);
         updateDashboard(mergeServerDashboardWithPending(
             payload,
             pending.today,
             pending.lifetime,
+            requestedMantra,
             summary.mantraChanges > 0
-        ));
+        ), { expectedMantra: requestedMantra });
         dashboardLocalDate = offlineLocalDateKey();
         await cacheDashboard();
         setConnectionStatus("online", summary.operations
             ? `${summary.count} count${summary.count === 1 ? "" : "s"} waiting to sync`
-            : "Synced with Google Sheets");
+            : `Synced — ${requestedMantra}`);
 
-        if (options.showSuccess) showToast("Dashboard refreshed.", "success");
+        if (options.showSuccess) showToast("Selected mantra dashboard refreshed.", "success");
     } catch (error) {
         console.error("Dashboard load failed:", error);
-        await loadLocalDashboard();
-        setConnectionStatus("error", "Cloud unavailable — using saved data");
-        if (options.showError !== false) {
-            showToast("Using offline data. Cloud sync will retry.", "error", 4500);
+        if (requestSerial === dashboardRequestSerial) {
+            await loadLocalDashboard(requestedMantra);
+            setConnectionStatus("error", "Cloud unavailable — selected mantra cache shown");
+            if (options.showError !== false) {
+                showToast("Selected mantra की saved counting दिखाई जा रही है।", "error", 4500);
+            }
         }
     }
 }
@@ -468,14 +552,16 @@ async function syncOneOfflineOperation(operation) {
         const summary = await pendingSummary();
         const payloadMantra = String(unwrapDashboardPayload(payload).mantra || operation.mantra || "");
 
-        if (payloadMantra === dashboardState.mantra) {
-            const pending = pendingCountsForMantra(summary, dashboardState.mantra);
+        if (sameMantraText(payloadMantra, dashboardState.mantra)) {
+            const selectedMantra = dashboardState.mantra;
+            const pending = pendingCountsForMantra(summary, selectedMantra);
             updateDashboard(mergeServerDashboardWithPending(
                 payload,
                 pending.today,
                 pending.lifetime,
+                selectedMantra,
                 false
-            ));
+            ), { expectedMantra: selectedMantra });
             await cacheDashboard();
         } else {
             await offlineSaveDashboard(currentUserId(), normalizeDashboard({
@@ -529,11 +615,14 @@ function flushOfflineQueue() {
             const server = await getDashboard(dashboardState.mantra, offlineLocalDateKey());
             const summary = await pendingSummary();
             const pending = pendingCountsForMantra(summary);
+            const selectedMantra = dashboardState.mantra;
             updateDashboard(mergeServerDashboardWithPending(
                 server,
                 pending.today,
-                pending.lifetime
-            ));
+                pending.lifetime,
+                selectedMantra,
+                false
+            ), { expectedMantra: selectedMantra });
             await cacheDashboard();
         } catch (error) {
             console.warn("Post-sync dashboard refresh failed:", error);
@@ -610,8 +699,9 @@ async function handleMantraChange() {
     const nextMantra = String(elements.mantraSelect.value || "").normalize("NFC").trim();
     const previousState = { ...dashboardState };
 
-    if (!nextMantra || nextMantra === dashboardState.mantra) return;
+    if (!nextMantra || sameMantraText(nextMantra, dashboardState.mantra)) return;
 
+    dashboardRequestSerial += 1;
     elements.mantraSelect.disabled = true;
 
     try {
@@ -652,7 +742,7 @@ async function handleMantraChange() {
         if (appSettings.voiceEnabled) speakMantra(nextMantra);
     } catch (error) {
         console.error("Mantra change failed:", error);
-        updateDashboard(previousState);
+        updateDashboard(previousState, { expectedMantra: previousState.mantra });
         await cacheDashboard();
         showToast("Mantra could not be changed. Previous count restored.", "error", 5000);
     } finally {
@@ -674,7 +764,7 @@ async function handleResetToday() {
     setButtonBusy(elements.resetTodayButton, true, "Resetting…");
     try {
         const payload = await resetToday(dashboardState.mantra, offlineLocalDateKey());
-        updateDashboard(payload);
+        updateDashboard(payload, { expectedMantra: dashboardState.mantra });
         dashboardLocalDate = offlineLocalDateKey();
         localStorage.removeItem(goalCompletionKey());
         await cacheDashboard();
@@ -705,7 +795,7 @@ async function handleResetAll() {
     setButtonBusy(elements.resetAllButton, true, "Resetting…");
     try {
         const payload = await resetAll(dashboardState.mantra, offlineLocalDateKey());
-        updateDashboard(payload);
+        updateDashboard(payload, { expectedMantra: dashboardState.mantra });
         localStorage.removeItem(goalCompletionKey());
         await cacheDashboard();
         historyLoaded = false;
@@ -956,7 +1046,7 @@ async function handleSaveMalaGoal(event) {
             goalMalas,
             offlineLocalDateKey()
         );
-        updateDashboard(payload);
+        updateDashboard(payload, { expectedMantra: dashboardState.mantra });
         await cacheDashboard();
         historyLoaded = false;
         showToast(`Daily goal saved: ${goalMalas} माला — ${dashboardState.mantra}`, "success", 4800);

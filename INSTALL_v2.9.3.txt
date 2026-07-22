@@ -1,0 +1,43 @@
+Naam Jaap Counter v2.9.3 — Selected Mantra Mala Isolation
+===============================================================
+
+Purpose
+-------
+Dashboard पर केवल dropdown में selected mantra की counting दिखाई जाएगी:
+- Selected Mantra Today Jaap
+- Selected Mantra Lifetime Jaap
+- Selected Mantra Today Malas
+- Selected Mantra Lifetime Malas
+- Selected Mantra Daily Mala Goal
+
+किसी दूसरे mantra या सभी mantras का combined mala total dashboard पर नहीं दिखेगा।
+
+GitHub Update
+-------------
+Repository root में ये 4 files replace करें:
+1. app.js
+2. index.html
+3. config.js
+4. sw.js
+
+Suggested commit message:
+fix: isolate dashboard mala count by selected mantra v2.9.3
+
+Google Apps Script
+------------------
+इस update के लिए Apps Script code या deployment बदलने की जरूरत नहीं है।
+Existing v2.9.2 backend पहले से User + Mantra के अनुसार data अलग रखता है।
+
+After Upload
+------------
+1. GitHub Pages deployment complete होने दें।
+2. App खोलें और एक बार refresh करें।
+3. Installed PWA में पुराना version दिखे तो app पूरी तरह close करके दोबारा खोलें।
+4. जरूरत पड़ने पर browser site data/cache clear करके reopen करें।
+
+Test
+----
+- Mantra A में 216 जाप करें: 2 Today Malas दिखनी चाहिए।
+- Mantra B चुनें: उसकी अपनी counting दिखनी चाहिए; Mantra A की 2 mala नहीं।
+- Mantra B में 108 जाप करें: Mantra B = 1 Today Mala।
+- Mantra A दोबारा चुनें: Mantra A = 2 Today Malas।
