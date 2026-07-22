@@ -1,17 +1,18 @@
-// Naam Jaap Counter v2.8.2 — user custom mantra manager
-// Custom mantra names are stored per verified user on this device.
-// Counting remains user + mantra isolated through the existing backend.
+// Naam Jaap Counter v2.9.2 — custom mantra cloud sync
+// Google Sheets is the source of truth. localStorage remains an offline cache.
 
 (() => {
     "use strict";
 
     const STORAGE_PREFIX = "naam-jaap-custom-mantras-v1:";
+    const DELETE_PREFIX = "naam-jaap-custom-mantra-deletes-v1:";
     const MAX_CUSTOM_MANTRAS = 25;
     const MAX_MANTRA_LENGTH = 120;
 
     let activeUserId = "";
     let standardMantras = new Set();
     let refreshTimer = null;
+    let cloudSyncPromise = null;
 
     function normalizeMantra(value) {
         return String(value || "")
@@ -23,6 +24,18 @@
 
     function mantraKey(value) {
         return normalizeMantra(value).toLocaleLowerCase("hi-IN");
+    }
+
+    function uniqueMantras(values) {
+        const unique = new Map();
+        (Array.isArray(values) ? values : []).forEach(item => {
+            const mantra = normalizeMantra(
+                typeof item === "string" ? item : item?.mantra
+            );
+            if (!mantra || mantra.length > MAX_MANTRA_LENGTH) return;
+            unique.set(mantraKey(mantra), mantra);
+        });
+        return Array.from(unique.values()).slice(0, MAX_CUSTOM_MANTRAS);
     }
 
     function getVerifiedUserId() {
@@ -43,41 +56,81 @@
         return `${STORAGE_PREFIX}${String(userId || "")}`;
     }
 
-    function readCustomMantras(userId) {
-        if (!userId) return [];
+    function deleteKey(userId) {
+        return `${DELETE_PREFIX}${String(userId || "")}`;
+    }
 
+    function readJsonList(key) {
         try {
-            const parsed = JSON.parse(localStorage.getItem(storageKey(userId)) || "[]");
-            if (!Array.isArray(parsed)) return [];
-
-            const unique = new Map();
-            parsed.forEach(item => {
-                const mantra = normalizeMantra(item);
-                if (!mantra || mantra.length > MAX_MANTRA_LENGTH) return;
-                unique.set(mantraKey(mantra), mantra);
-            });
-
-            return Array.from(unique.values()).slice(0, MAX_CUSTOM_MANTRAS);
+            const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+            return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
             console.warn("Custom mantra storage could not be read:", error);
             return [];
         }
     }
 
-    function writeCustomMantras(userId, mantras) {
-        if (!userId) return;
-        localStorage.setItem(storageKey(userId), JSON.stringify(mantras));
+    function readCustomMantras(userId) {
+        if (!userId) return [];
+        return uniqueMantras(readJsonList(storageKey(userId)));
     }
 
-    function showMessage(message, type = "info") {
+    function writeCustomMantras(userId, mantras) {
+        if (!userId) return;
+        localStorage.setItem(storageKey(userId), JSON.stringify(uniqueMantras(mantras)));
+    }
+
+    function readPendingDeletes(userId) {
+        if (!userId) return [];
+        return uniqueMantras(readJsonList(deleteKey(userId)));
+    }
+
+    function writePendingDeletes(userId, mantras) {
+        if (!userId) return;
+        const normalized = uniqueMantras(mantras);
+        if (normalized.length) {
+            localStorage.setItem(deleteKey(userId), JSON.stringify(normalized));
+        } else {
+            localStorage.removeItem(deleteKey(userId));
+        }
+    }
+
+    function addPendingDelete(userId, mantra) {
+        writePendingDeletes(userId, [...readPendingDeletes(userId), mantra]);
+    }
+
+    function removePendingDelete(userId, mantra) {
+        writePendingDeletes(
+            userId,
+            readPendingDeletes(userId).filter(item => mantraKey(item) !== mantraKey(mantra))
+        );
+    }
+
+    function extractCloudMantras(payload) {
+        if (Array.isArray(payload)) return uniqueMantras(payload);
+        return uniqueMantras(payload?.mantras || payload?.items || payload?.customMantras || []);
+    }
+
+    function cloudSyncAvailable() {
+        return Boolean(
+            navigator.onLine
+            && typeof isAuthenticated === "function"
+            && isAuthenticated()
+            && typeof getCustomMantras === "function"
+            && typeof addCustomMantraCloud === "function"
+            && typeof deleteCustomMantraCloud === "function"
+        );
+    }
+
+    function showMessage(message, type = "info", toast = true) {
         const help = document.getElementById("customMantraHelp");
         if (help) {
             help.textContent = message;
             help.dataset.type = type;
         }
 
-        if (typeof showToast === "function") {
-            showToast(message, type === "error" ? "error" : "success", 3800);
+        if (toast && typeof showToast === "function") {
+            showToast(message, type === "error" ? "error" : "success", 4200);
         }
     }
 
@@ -188,7 +241,67 @@
         select.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    function addCustomMantra(event) {
+    async function syncCustomMantrasFromCloud(options = {}) {
+        const userId = getVerifiedUserId();
+        if (!userId || userId !== activeUserId || !cloudSyncAvailable()) return false;
+        if (cloudSyncPromise) return cloudSyncPromise;
+
+        cloudSyncPromise = (async () => {
+            try {
+                let cloud = extractCloudMantras(await getCustomMantras());
+                const pendingDeletes = readPendingDeletes(userId);
+
+                for (const mantra of pendingDeletes) {
+                    await deleteCustomMantraCloud(mantra);
+                    removePendingDelete(userId, mantra);
+                    cloud = cloud.filter(item => mantraKey(item) !== mantraKey(mantra));
+                }
+
+                const local = readCustomMantras(userId)
+                    .filter(item => !readPendingDeletes(userId)
+                        .some(deleted => mantraKey(deleted) === mantraKey(item)));
+
+                for (const mantra of local) {
+                    if (!cloud.some(item => mantraKey(item) === mantraKey(mantra))) {
+                        const result = await addCustomMantraCloud(mantra);
+                        const returned = extractCloudMantras(result);
+                        cloud = returned.length ? returned : uniqueMantras([...cloud, mantra]);
+                    }
+                }
+
+                // Final read makes another device's latest additions visible.
+                const finalResult = await getCustomMantras();
+                const finalCloud = extractCloudMantras(finalResult);
+                const finalMantras = finalCloud.length || !local.length
+                    ? finalCloud
+                    : uniqueMantras([...cloud, ...local]);
+
+                writeCustomMantras(userId, finalMantras);
+                renderCustomMantras();
+
+                if (options.showSuccess) {
+                    showMessage("Custom mantras Google Sheets से sync हो गए।", "success");
+                } else {
+                    showMessage("Custom mantras cloud sync active है।", "info", false);
+                }
+                return true;
+            } catch (error) {
+                console.warn("Custom mantra cloud sync failed:", error);
+                showMessage(
+                    "Cloud sync अभी नहीं हो पाया। Device पर saved mantra सुरक्षित है और अगली बार फिर sync होगा।",
+                    "error",
+                    Boolean(options.showError)
+                );
+                return false;
+            } finally {
+                cloudSyncPromise = null;
+            }
+        })();
+
+        return cloudSyncPromise;
+    }
+
+    async function addCustomMantra(event) {
         event.preventDefault();
 
         const input = document.getElementById("customMantraInput");
@@ -238,25 +351,42 @@
         }
 
         customMantras.push(mantra);
+        removePendingDelete(userId, mantra);
         writeCustomMantras(userId, customMantras);
         input.value = "";
         renderCustomMantras();
         selectCustomMantra(mantra);
-        showMessage("Custom mantra जोड़ दिया गया। इसकी counting अलग रहेगी।", "success");
+
+        if (!cloudSyncAvailable()) {
+            showMessage("Custom mantra device पर save है। Internet मिलने पर cloud में sync होगा।", "success");
+            return;
+        }
+
+        try {
+            const result = await addCustomMantraCloud(mantra);
+            const cloudMantras = extractCloudMantras(result);
+            if (cloudMantras.length) writeCustomMantras(userId, cloudMantras);
+            renderCustomMantras();
+            showMessage("Custom mantra cloud में save हो गया।", "success");
+        } catch (error) {
+            console.warn("Custom mantra cloud add failed:", error);
+            showMessage("Mantra device पर save है; cloud sync अगली बार फिर होगा।", "error");
+        }
     }
 
-    function deleteCustomMantra(mantra) {
+    async function deleteCustomMantra(mantra) {
         const userId = getVerifiedUserId();
         if (!userId) return;
 
         const confirmed = window.confirm(
-            `“${mantra}” को dropdown से हटाएँ?\n\nGoogle Sheets में पुरानी counting delete नहीं होगी।`
+            `“${mantra}” को dropdown और cloud list से हटाएँ?\n\nGoogle Sheets में पुरानी counting delete नहीं होगी।`
         );
         if (!confirmed) return;
 
         const remaining = readCustomMantras(userId)
             .filter(item => mantraKey(item) !== mantraKey(mantra));
         writeCustomMantras(userId, remaining);
+        addPendingDelete(userId, mantra);
 
         const select = document.getElementById("mantraSelect");
         const wasSelected = select && mantraKey(select.value) === mantraKey(mantra);
@@ -268,7 +398,22 @@
             select.dispatchEvent(new Event("change", { bubbles: true }));
         }
 
-        showMessage("Custom mantra dropdown से हटा दिया गया।", "success");
+        if (!cloudSyncAvailable()) {
+            showMessage("Mantra device से हट गया। Internet मिलने पर cloud से भी हटेगा।", "success");
+            return;
+        }
+
+        try {
+            const result = await deleteCustomMantraCloud(mantra);
+            removePendingDelete(userId, mantra);
+            const cloudMantras = extractCloudMantras(result);
+            writeCustomMantras(userId, cloudMantras);
+            renderCustomMantras();
+            showMessage("Custom mantra cloud list से हटा दिया गया।", "success");
+        } catch (error) {
+            console.warn("Custom mantra cloud delete failed:", error);
+            showMessage("Device से हट गया; cloud deletion अगली sync में फिर होगी।", "error");
+        }
     }
 
     function refreshForCurrentUser() {
@@ -282,6 +427,8 @@
         const button = document.getElementById("addCustomMantraBtn");
         if (input) input.disabled = !userId;
         if (button) button.disabled = !userId;
+
+        if (userId) syncCustomMantrasFromCloud({ showError: false });
     }
 
     function initializeCustomMantras() {
@@ -294,8 +441,15 @@
 
         refreshTimer = window.setInterval(refreshForCurrentUser, 900);
 
+        window.addEventListener("online", () => {
+            if (activeUserId) syncCustomMantrasFromCloud({ showError: false });
+        });
+
         window.addEventListener("storage", event => {
-            if (activeUserId && event.key === storageKey(activeUserId)) {
+            if (
+                activeUserId
+                && (event.key === storageKey(activeUserId) || event.key === deleteKey(activeUserId))
+            ) {
                 renderCustomMantras();
             }
         });

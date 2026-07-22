@@ -121,3 +121,16 @@ function saveMalaGoal(mantra, goalMalas, localDate = "") {
 function getHistory(limit = 100) {
     return api("getHistory", { limit });
 }
+
+// Custom Mantra cloud sync actions (v2.9.2).
+function getCustomMantras() {
+    return api("getCustomMantras", {});
+}
+
+function addCustomMantraCloud(mantra) {
+    return api("addCustomMantra", { mantra });
+}
+
+function deleteCustomMantraCloud(mantra) {
+    return api("deleteCustomMantra", { mantra });
+}
