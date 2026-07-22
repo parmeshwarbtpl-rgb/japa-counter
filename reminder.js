@@ -1,4 +1,4 @@
-// Privacy-friendly live clock and local Jaap reminder.
+// Naam Jaap Counter v2.9.4 — local reminder with in-app alarm tone.
 // Reminder settings stay on this device. No reminder data is sent to Google Sheets.
 
 const REMINDER_STORAGE_KEY = "naam-jaap-local-reminder-v1";
@@ -9,6 +9,7 @@ const DEFAULT_REMINDER = Object.freeze({
     enabled: false,
     time: "06:00",
     label: "समय हो गया है—नाम जप करें।",
+    toneVolume: 0.75,
     lastTriggeredDate: "",
 });
 
@@ -16,6 +17,8 @@ let reminderState = readReminderState();
 let clockTimer = null;
 let reminderTimer = null;
 let reminderInitialized = false;
+let reminderToneStopTimer = null;
+let reminderToneWasBackgroundPlaying = false;
 
 function reminderElements() {
     return {
@@ -25,6 +28,9 @@ function reminderElements() {
         enabled: document.getElementById("reminderEnabled"),
         reminderTime: document.getElementById("reminderTime"),
         label: document.getElementById("reminderLabel"),
+        toneVolume: document.getElementById("reminderToneVolume"),
+        toneVolumeText: document.getElementById("reminderToneVolumeText"),
+        toneAudio: document.getElementById("reminderToneAudio"),
         status: document.getElementById("reminderStatus"),
         enableNotifications: document.getElementById("enableNotificationsBtn"),
         test: document.getElementById("testReminderBtn"),
@@ -38,11 +44,16 @@ function sanitizeReminderState(value = {}) {
         : DEFAULT_REMINDER.time;
     const label = String(value.label || DEFAULT_REMINDER.label).trim().slice(0, 80)
         || DEFAULT_REMINDER.label;
+    const rawToneVolume = Number(value.toneVolume);
+    const toneVolume = Number.isFinite(rawToneVolume)
+        ? Math.min(1, Math.max(0, rawToneVolume))
+        : DEFAULT_REMINDER.toneVolume;
 
     return {
         enabled: Boolean(value.enabled),
         time,
         label,
+        toneVolume,
         lastTriggeredDate: /^\d{4}-\d{2}-\d{2}$/.test(String(value.lastTriggeredDate || ""))
             ? String(value.lastTriggeredDate)
             : "",
@@ -66,6 +77,75 @@ function saveReminderState(partial = {}) {
         // In-memory reminder still works when storage is unavailable.
     }
     return reminderState;
+}
+
+
+function setReminderToneVolume(value) {
+    const volume = Math.min(1, Math.max(0, Number(value) || 0));
+    const audio = reminderElements().toneAudio;
+    if (audio) audio.volume = volume;
+    return volume;
+}
+
+function stopReminderTone({ resumeBackground = true } = {}) {
+    window.clearTimeout(reminderToneStopTimer);
+    reminderToneStopTimer = null;
+
+    const els = reminderElements();
+    if (els.toneAudio) {
+        els.toneAudio.pause();
+        els.toneAudio.currentTime = 0;
+    }
+
+    const backgroundAudio = document.getElementById("templeBackgroundAudio");
+    if (resumeBackground && reminderToneWasBackgroundPlaying && backgroundAudio) {
+        backgroundAudio.play().catch(() => undefined);
+    }
+    reminderToneWasBackgroundPlaying = false;
+}
+
+async function playReminderTone({ test = false, quietError = false } = {}) {
+    const els = reminderElements();
+    const audio = els.toneAudio;
+    if (!audio) return false;
+
+    const backgroundAudio = document.getElementById("templeBackgroundAudio");
+    const backgroundWasPlaying = Boolean(
+        reminderToneWasBackgroundPlaying
+        || (backgroundAudio && !backgroundAudio.paused && !backgroundAudio.ended)
+    );
+
+    stopReminderTone({ resumeBackground: false });
+    reminderToneWasBackgroundPlaying = backgroundWasPlaying;
+    if (backgroundAudio && !backgroundAudio.paused) backgroundAudio.pause();
+
+    audio.volume = reminderState.toneVolume;
+    audio.currentTime = 0;
+
+    try {
+        await audio.play();
+        reminderToneStopTimer = window.setTimeout(
+            () => stopReminderTone(),
+            12000
+        );
+        if (test) {
+            showReminderToast("Alarm tone test started. Keep this app allowed to play sound.", "success");
+        }
+        return true;
+    } catch (error) {
+        console.warn("Reminder tone could not start:", error);
+        if (backgroundWasPlaying && backgroundAudio) {
+            backgroundAudio.play().catch(() => undefined);
+        }
+        reminderToneWasBackgroundPlaying = false;
+        if (!quietError) {
+            showReminderToast(
+                "Alarm sound was blocked. Tap Test Alarm once after opening the app and check phone media volume.",
+                "error"
+            );
+        }
+        return false;
+    }
 }
 
 function localDateKey(date = new Date()) {
@@ -116,6 +196,13 @@ function renderReminderSettings() {
     els.enabled.checked = reminderState.enabled;
     els.reminderTime.value = reminderState.time;
     els.label.value = reminderState.label;
+    if (els.toneVolume) {
+        els.toneVolume.value = String(Math.round(reminderState.toneVolume * 100));
+    }
+    if (els.toneVolumeText) {
+        els.toneVolumeText.textContent = `${Math.round(reminderState.toneVolume * 100)}%`;
+    }
+    setReminderToneVolume(reminderState.toneVolume);
 
     const permission = "Notification" in window ? Notification.permission : "unsupported";
     els.enableNotifications.textContent = permission === "granted"
@@ -168,14 +255,18 @@ async function requestReminderPermission() {
     return false;
 }
 
-async function showReminderNotification({ test = false } = {}) {
+async function showReminderNotification({ test = false, playTone = true } = {}) {
+    const tonePlayed = playTone
+        ? await playReminderTone({ test, quietError: !test })
+        : false;
+
     const alreadyGranted = "Notification" in window && Notification.permission === "granted";
     const allowed = alreadyGranted || await requestReminderPermission();
-    if (!allowed) return false;
+    if (!allowed) return tonePlayed;
 
     if (!("serviceWorker" in navigator)) {
         showReminderToast(reminderState.label, "info");
-        return false;
+        return tonePlayed;
     }
 
     try {
@@ -188,14 +279,14 @@ async function showReminderNotification({ test = false } = {}) {
             tag: test ? "naam-jaap-reminder-test" : "naam-jaap-daily-reminder",
             renotify: true,
             requireInteraction: false,
-            vibrate: [180, 80, 180],
+            vibrate: [180, 80, 180, 80, 260],
             data: { url: "./" },
         });
         return true;
     } catch (error) {
         console.error("Reminder notification failed:", error);
-        showReminderToast("Reminder could not be displayed on this device.", "error");
-        return false;
+        showReminderToast("Reminder notification could not be displayed on this device.", "error");
+        return tonePlayed;
     }
 }
 
@@ -316,8 +407,26 @@ function bindReminderEvents() {
         showReminderToast("Reminder message saved.", "success");
     });
 
+    els.toneVolume?.addEventListener("input", () => {
+        const toneVolume = setReminderToneVolume(Number(els.toneVolume.value) / 100);
+        if (els.toneVolumeText) {
+            els.toneVolumeText.textContent = `${Math.round(toneVolume * 100)}%`;
+        }
+    });
+
+    els.toneVolume?.addEventListener("change", () => {
+        const toneVolume = setReminderToneVolume(Number(els.toneVolume.value) / 100);
+        saveReminderState({ toneVolume });
+        renderReminderSettings();
+        showReminderToast("Alarm tone volume saved on this device.", "success");
+    });
+
+    els.toneAudio?.addEventListener("ended", () => stopReminderTone());
+
     els.enableNotifications.addEventListener("click", requestReminderPermission);
-    els.test.addEventListener("click", () => showReminderNotification({ test: true }));
+    els.test.addEventListener("click", async () => {
+        await showReminderNotification({ test: true, playTone: true });
+    });
     els.addCalendar.addEventListener("click", downloadCalendarReminder);
 
     document.addEventListener("visibilitychange", () => {

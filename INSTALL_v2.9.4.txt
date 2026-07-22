@@ -1,0 +1,19 @@
+Naam Jaap Counter v2.9.4 — Daily Reminder Alarm Tone
+
+Replace these files in the GitHub repository root:
+1. reminder.js
+2. index.html
+3. config.js
+4. sw.js
+5. reminder-tone.wav
+
+Commit message:
+feat: add daily reminder alarm tone v2.9.4
+
+Google Apps Script deployment is NOT required.
+
+Important behavior:
+- Custom alarm tone plays while the web app/PWA is open or still running.
+- Tap “Test Alarm & Notification” once after opening the app so the browser can allow sound.
+- Phone media volume must be audible.
+- When the app is fully closed, browsers cannot guarantee custom audio. Use “Add to Phone Calendar” for a reliable system alarm.
