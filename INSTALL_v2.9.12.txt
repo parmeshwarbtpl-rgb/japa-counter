@@ -1,0 +1,50 @@
+Naam Jaap Counter v2.9.12 — Manual Profile Photo Adjust
+
+WHY THIS UPDATE
+Automatic cropping cannot reliably place every person's face correctly.
+This version lets the user adjust the photo before saving.
+
+NEW PHOTO FLOW
+1. Settings > Profile > Choose Photo
+2. A preview/adjust panel opens.
+3. Face Position slider:
+   - move towards 0% to show more of the TOP of the photo
+   - move towards 100% to show more of the BOTTOM
+4. Zoom slider:
+   - 100% = normal cover crop
+   - increase only when the face is too small
+5. Tap Apply Photo.
+6. The final 768x768 crop is saved locally.
+
+BENEFITS
+- Full face can be centred manually.
+- No more fixed auto-crop guess.
+- Preview is shown before saving.
+- Saved output quality: 768x768, WebP/JPEG quality 94%.
+- Header and Signed-in Account use the exact same saved crop.
+
+IMPORTANT
+After installing v2.9.12, choose the ORIGINAL photo again.
+The old saved photo was already cropped by the previous version and cannot recover
+the missing part of the face.
+
+VERSION
+- About: v2.9.12
+- App Updates: v2.9.12
+- PWA cache: v2.9.12
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. profile.js
+5. app-updates.js
+
+KEEP EXISTING
+- trusted-device.js
+- ecosystem.js
+
+No Google Apps Script changes required.
+
+Suggested commit:
+fix: add manual profile photo crop position and zoom v2.9.12

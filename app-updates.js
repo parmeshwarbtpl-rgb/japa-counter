@@ -1,8 +1,8 @@
-// Naam Jaap Counter v2.9.11 — app update checker.
+// Naam Jaap Counter v2.9.12 — app update checker.
 // Uses the public config.js as the version source of truth.
 
 (() => {
-    const CURRENT_BUILD = "2.9.11";
+    const CURRENT_BUILD = "2.9.12";
     let detectedRemoteVersion = "";
     let updateAvailable = false;
 

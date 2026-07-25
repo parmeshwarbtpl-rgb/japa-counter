@@ -1,4 +1,4 @@
-// Naam Jaap Counter v2.9.11 — clearer profile photo, larger avatars and face-focused crop.
+// Naam Jaap Counter v2.9.12 — manual profile photo crop, face position and zoom.
 
 (() => {
     const PROFILE_KEY = "naam-jaap-local-profile-v1";
@@ -8,6 +8,9 @@
     const PHOTO_KEY = "photo";
 
     let profilePhotoUrl = "";
+    let pendingPhotoFile = null;
+    let pendingPhotoImage = null;
+    let pendingPhotoObjectUrl = "";
 
     function byId(id) {
         return document.getElementById(id);
@@ -396,12 +399,12 @@
             }
 
             .local-profile-preview {
-                background-position: center 30%;
+                background-position: center;
             }
 
             .account-initial.has-local-profile-photo,
             .account-avatar.has-local-profile-photo {
-                background-position: center 28%;
+                background-position: center;
                 image-rendering: auto;
                 -webkit-font-smoothing: antialiased;
             }
@@ -438,6 +441,81 @@
                 color: #a94c00;
                 font-weight: 800;
                 cursor: pointer;
+            }
+
+            .photo-adjust-panel {
+                grid-column: 1 / -1;
+                width: 100%;
+                padding: 14px;
+                border: 1px solid #ffd2ad;
+                border-radius: 16px;
+                background: #fffaf5;
+            }
+
+            .photo-adjust-panel[hidden] {
+                display: none !important;
+            }
+
+            .photo-adjust-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .photo-adjust-title strong {
+                color: #33383f;
+                font-size: 0.9rem;
+            }
+
+            .photo-adjust-title small {
+                color: #d85d00;
+                font-size: 0.72rem;
+                font-weight: 800;
+            }
+
+            .photo-adjust-field {
+                margin-top: 12px;
+            }
+
+            .photo-adjust-field label {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 7px;
+                color: #555a61;
+                font-size: 0.8rem;
+                font-weight: 800;
+            }
+
+            .photo-adjust-field output {
+                color: #d85d00;
+                font-size: 0.76rem;
+                font-weight: 800;
+            }
+
+            .photo-adjust-field input[type="range"] {
+                width: 100%;
+                min-height: 32px;
+                margin: 0;
+                padding: 0;
+                accent-color: #ff6f00;
+            }
+
+            .photo-adjust-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 9px;
+                margin-top: 14px;
+            }
+
+            .photo-adjust-help {
+                margin-top: 10px;
+                color: #73777e;
+                font-size: 0.76rem;
+                line-height: 1.45;
             }
 
             .local-profile-fields {
@@ -577,6 +655,10 @@
                 .account-chip-status {
                     font-size: 0.62rem;
                 }
+
+                .photo-adjust-actions {
+                    grid-template-columns: 1fr;
+                }
             }
         `;
 
@@ -658,8 +740,72 @@
                     </button>
 
                     <small class="field-help">
-                        Stored only on this device · face-focused crop · max source file 10 MB
+                        Stored only on this device · max source file 10 MB
                     </small>
+                </div>
+
+                <div
+                    id="photoAdjustPanel"
+                    class="photo-adjust-panel"
+                    hidden
+                >
+                    <div class="photo-adjust-title">
+                        <strong>Adjust Profile Photo</strong>
+                        <small>Preview before saving</small>
+                    </div>
+
+                    <div class="photo-adjust-field">
+                        <label for="profilePhotoPosition">
+                            <span>Face Position</span>
+                            <output id="profilePhotoPositionValue">18%</output>
+                        </label>
+                        <input
+                            id="profilePhotoPosition"
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value="18"
+                        >
+                    </div>
+
+                    <div class="photo-adjust-field">
+                        <label for="profilePhotoZoom">
+                            <span>Zoom</span>
+                            <output id="profilePhotoZoomValue">115%</output>
+                        </label>
+                        <input
+                            id="profilePhotoZoom"
+                            type="range"
+                            min="100"
+                            max="240"
+                            step="5"
+                            value="115"
+                        >
+                    </div>
+
+                    <div class="photo-adjust-actions">
+                        <button
+                            id="applyAdjustedPhotoBtn"
+                            class="primary-btn"
+                            type="button"
+                        >
+                            Apply Photo
+                        </button>
+
+                        <button
+                            id="cancelAdjustedPhotoBtn"
+                            class="secondary-btn"
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+
+                    <p class="photo-adjust-help">
+                        Move Face Position until the full face is centred in the circle.
+                        Use Zoom only if the face is still too small.
+                    </p>
                 </div>
             </div>
 
@@ -781,10 +927,39 @@
         );
 
         byId(
+            "profilePhotoPosition"
+        )?.addEventListener(
+            "input",
+            handlePhotoAdjustInput
+        );
+
+        byId(
+            "profilePhotoZoom"
+        )?.addEventListener(
+            "input",
+            handlePhotoAdjustInput
+        );
+
+        byId(
+            "applyAdjustedPhotoBtn"
+        )?.addEventListener(
+            "click",
+            applyAdjustedPhoto
+        );
+
+        byId(
+            "cancelAdjustedPhotoBtn"
+        )?.addEventListener(
+            "click",
+            cancelPhotoAdjustment
+        );
+
+        byId(
             "removeLocalProfilePhotoBtn"
         )?.addEventListener(
             "click",
             async () => {
+                clearPendingPhoto();
                 await clearProfilePhoto();
                 applyPhotoToUi(null);
 
@@ -822,8 +997,7 @@
                 file.type
             )
         ) {
-            event.target.value =
-                "";
+            event.target.value = "";
 
             showProfileError(
                 "Choose a PNG, JPG or WebP image."
@@ -836,8 +1010,7 @@
             file.size >
             10 * 1024 * 1024
         ) {
-            event.target.value =
-                "";
+            event.target.value = "";
 
             showProfileError(
                 "Choose a photo smaller than 10 MB."
@@ -847,9 +1020,323 @@
         }
 
         try {
+            clearPendingPhoto();
+
+            pendingPhotoFile = file;
+            pendingPhotoObjectUrl =
+                URL.createObjectURL(file);
+
+            pendingPhotoImage =
+                await loadImageElement(
+                    pendingPhotoObjectUrl
+                );
+
+            const position =
+                byId("profilePhotoPosition");
+
+            const zoom =
+                byId("profilePhotoZoom");
+
+            if (position) {
+                position.value = "18";
+            }
+
+            if (zoom) {
+                zoom.value = "115";
+            }
+
+            byId(
+                "photoAdjustPanel"
+            ).hidden = false;
+
+            renderPendingPhotoPreview();
+
+            if (
+                typeof showToast ===
+                "function"
+            ) {
+                showToast(
+                    "Adjust the face position and zoom, then tap Apply Photo.",
+                    "info"
+                );
+            }
+        } catch (error) {
+            console.error(
+                "Profile photo preview failed:",
+                error
+            );
+
+            clearPendingPhoto();
+
+            showProfileError(
+                "Profile photo could not be opened."
+            );
+        } finally {
+            event.target.value = "";
+        }
+    }
+
+    function handlePhotoAdjustInput() {
+        updatePhotoAdjustOutputs();
+        renderPendingPhotoPreview();
+    }
+
+    function updatePhotoAdjustOutputs() {
+        const position =
+            Number(
+                byId(
+                    "profilePhotoPosition"
+                )?.value ||
+                18
+            );
+
+        const zoom =
+            Number(
+                byId(
+                    "profilePhotoZoom"
+                )?.value ||
+                115
+            );
+
+        const positionOutput =
+            byId(
+                "profilePhotoPositionValue"
+            );
+
+        const zoomOutput =
+            byId(
+                "profilePhotoZoomValue"
+            );
+
+        if (positionOutput) {
+            positionOutput.textContent =
+                `${position}%`;
+        }
+
+        if (zoomOutput) {
+            zoomOutput.textContent =
+                `${zoom}%`;
+        }
+    }
+
+    function drawAdjustedPhoto(
+        image,
+        canvas,
+        positionPercent,
+        zoomPercent
+    ) {
+        const context =
+            canvas.getContext(
+                "2d",
+                {
+                    alpha: false,
+                }
+            );
+
+        const size =
+            canvas.width;
+
+        const sourceWidth =
+            image.naturalWidth ||
+            image.width;
+
+        const sourceHeight =
+            image.naturalHeight ||
+            image.height;
+
+        const baseScale =
+            Math.max(
+                size / sourceWidth,
+                size / sourceHeight
+            );
+
+        const zoomFactor =
+            Math.max(
+                1,
+                Number(
+                    zoomPercent ||
+                    100
+                ) / 100
+            );
+
+        const scale =
+            baseScale *
+            zoomFactor;
+
+        const drawWidth =
+            sourceWidth *
+            scale;
+
+        const drawHeight =
+            sourceHeight *
+            scale;
+
+        const overflowX =
+            Math.max(
+                0,
+                drawWidth -
+                size
+            );
+
+        const overflowY =
+            Math.max(
+                0,
+                drawHeight -
+                size
+            );
+
+        const x =
+            -overflowX /
+            2;
+
+        const position =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    Number(
+                        positionPercent ||
+                        0
+                    )
+                )
+            ) / 100;
+
+        const y =
+            -overflowY *
+            position;
+
+        context.imageSmoothingEnabled =
+            true;
+
+        context.imageSmoothingQuality =
+            "high";
+
+        context.fillStyle =
+            "#ffffff";
+
+        context.fillRect(
+            0,
+            0,
+            size,
+            size
+        );
+
+        context.drawImage(
+            image,
+            x,
+            y,
+            drawWidth,
+            drawHeight
+        );
+    }
+
+    function renderPendingPhotoPreview() {
+        if (!pendingPhotoImage) return;
+
+        updatePhotoAdjustOutputs();
+
+        const position =
+            Number(
+                byId(
+                    "profilePhotoPosition"
+                )?.value ||
+                18
+            );
+
+        const zoom =
+            Number(
+                byId(
+                    "profilePhotoZoom"
+                )?.value ||
+                115
+            );
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+        canvas.width = 320;
+        canvas.height = 320;
+
+        drawAdjustedPhoto(
+            pendingPhotoImage,
+            canvas,
+            position,
+            zoom
+        );
+
+        const preview =
+            byId(
+                "localProfilePreview"
+            );
+
+        if (!preview) return;
+
+        preview.style.backgroundImage =
+            `url("${canvas.toDataURL(
+                "image/jpeg",
+                0.9
+            )}")`;
+
+        preview.style.backgroundPosition =
+            "center";
+
+        preview.style.backgroundSize =
+            "cover";
+
+        preview.classList.add(
+            "has-local-profile-photo"
+        );
+
+        preview.textContent = "";
+    }
+
+    async function applyAdjustedPhoto() {
+        if (
+            !pendingPhotoImage ||
+            !pendingPhotoFile
+        ) {
+            showProfileError(
+                "Choose a photo first."
+            );
+
+            return;
+        }
+
+        const button =
+            byId(
+                "applyAdjustedPhotoBtn"
+            );
+
+        if (button) {
+            button.disabled = true;
+            button.textContent =
+                "Applying…";
+        }
+
+        try {
+            const position =
+                Number(
+                    byId(
+                        "profilePhotoPosition"
+                    )?.value ||
+                    18
+                );
+
+            const zoom =
+                Number(
+                    byId(
+                        "profilePhotoZoom"
+                    )?.value ||
+                    115
+                );
+
             const optimized =
-                await optimizeProfilePhoto(
-                    file
+                await createAdjustedProfilePhoto(
+                    pendingPhotoImage,
+                    position,
+                    zoom
                 );
 
             await saveProfilePhoto(
@@ -860,28 +1347,123 @@
                 optimized
             );
 
-            event.target.value =
-                "";
+            clearPendingPhoto();
 
             if (
                 typeof showToast ===
                 "function"
             ) {
                 showToast(
-                    "Profile photo saved on this device.",
+                    "Profile photo saved with your crop.",
                     "success"
                 );
             }
         } catch (error) {
             console.error(
-                "Profile photo update failed:",
+                "Adjusted profile photo save failed:",
                 error
             );
 
             showProfileError(
-                "Profile photo could not be processed."
+                "Adjusted profile photo could not be saved."
+            );
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent =
+                    "Apply Photo";
+            }
+        }
+    }
+
+    function cancelPhotoAdjustment() {
+        clearPendingPhoto();
+
+        refreshPhotoFromDevice()
+            .catch(
+                () => undefined
+            );
+
+        if (
+            typeof showToast ===
+            "function"
+        ) {
+            showToast(
+                "Photo adjustment cancelled.",
+                "info"
             );
         }
+    }
+
+    function clearPendingPhoto() {
+        pendingPhotoFile = null;
+        pendingPhotoImage = null;
+
+        if (pendingPhotoObjectUrl) {
+            URL.revokeObjectURL(
+                pendingPhotoObjectUrl
+            );
+
+            pendingPhotoObjectUrl = "";
+        }
+
+        const panel =
+            byId(
+                "photoAdjustPanel"
+            );
+
+        if (panel) {
+            panel.hidden = true;
+        }
+    }
+
+    async function createAdjustedProfilePhoto(
+        image,
+        position,
+        zoom
+    ) {
+        const size = 768;
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+        canvas.width = size;
+        canvas.height = size;
+
+        drawAdjustedPhoto(
+            image,
+            canvas,
+            position,
+            zoom
+        );
+
+        const webp =
+            await canvasToBlob(
+                canvas,
+                "image/webp",
+                0.94
+            );
+
+        if (webp) {
+            return webp;
+        }
+
+        const jpeg =
+            await canvasToBlob(
+                canvas,
+                "image/jpeg",
+                0.94
+            );
+
+        if (!jpeg) {
+            throw new Error(
+                "Image crop could not be created."
+            );
+        }
+
+        return jpeg;
     }
 
     function showProfileError(message) {
@@ -928,149 +1510,6 @@
                 quality
             );
         });
-    }
-
-    async function optimizeProfilePhoto(file) {
-        const sourceUrl =
-            URL.createObjectURL(
-                file
-            );
-
-        try {
-            const image =
-                await loadImageElement(
-                    sourceUrl
-                );
-
-            const sourceWidth =
-                image.naturalWidth ||
-                image.width;
-
-            const sourceHeight =
-                image.naturalHeight ||
-                image.height;
-
-            const side =
-                Math.min(
-                    sourceWidth,
-                    sourceHeight
-                );
-
-            // Portrait photos usually place the face in the upper half.
-            // Bias the square crop upward so the face remains prominent
-            // instead of centering too much torso/body inside the avatar.
-            const horizontalOverflow =
-                Math.max(
-                    0,
-                    sourceWidth -
-                    side
-                );
-
-            const verticalOverflow =
-                Math.max(
-                    0,
-                    sourceHeight -
-                    side
-                );
-
-            const sx =
-                Math.floor(
-                    horizontalOverflow /
-                    2
-                );
-
-            const sy =
-                sourceHeight >
-                sourceWidth
-                    ? Math.floor(
-                        verticalOverflow *
-                        0.18
-                    )
-                    : Math.floor(
-                        verticalOverflow /
-                        2
-                    );
-
-            const size =
-                768;
-
-            const canvas =
-                document.createElement(
-                    "canvas"
-                );
-
-            canvas.width =
-                size;
-
-            canvas.height =
-                size;
-
-            const context =
-                canvas.getContext(
-                    "2d",
-                    {
-                        alpha: false,
-                    }
-                );
-
-            context.imageSmoothingEnabled =
-                true;
-
-            context.imageSmoothingQuality =
-                "high";
-
-            context.fillStyle =
-                "#ffffff";
-
-            context.fillRect(
-                0,
-                0,
-                size,
-                size
-            );
-
-            context.drawImage(
-                image,
-                sx,
-                sy,
-                side,
-                side,
-                0,
-                0,
-                size,
-                size
-            );
-
-            const webp =
-                await canvasToBlob(
-                    canvas,
-                    "image/webp",
-                    0.92
-                );
-
-            if (webp) {
-                return webp;
-            }
-
-            const jpeg =
-                await canvasToBlob(
-                    canvas,
-                    "image/jpeg",
-                    0.92
-                );
-
-            if (!jpeg) {
-                throw new Error(
-                    "Image optimization failed."
-                );
-            }
-
-            return jpeg;
-        } finally {
-            URL.revokeObjectURL(
-                sourceUrl
-            );
-        }
     }
 
     const originalRenderAccountProfile =
