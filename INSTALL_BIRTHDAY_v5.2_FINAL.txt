@@ -1,0 +1,30 @@
+Birthday Reminder v5.2 FINAL — Unified Safety + Trusted Device
+
+This package supersedes the earlier v5.2 package.
+
+UPLOAD / REPLACE
+1. birthday-reminders.js      NEW / REPLACE
+2. app-v52-enhancements.js    NEW / REPLACE
+3. ecosystem-v52.js           NEW
+4. sw.js                      REPLACE
+
+INCLUDED
+- Birthday reminder settings: Birthday day, 1 / 3 / 7 days before.
+- Test notification + calendar VALARM export.
+- App Updates / Update Now remains available.
+- Install Web App card remains available.
+- Existing profile photo, name and status update remains device-local.
+- Shared Data Safety Standard card.
+- App Family / Naam Jaap integration with NO personal-data transfer.
+- Trusted Device Mode:
+  • Installed app opens saved local view first.
+  • Remember Contacts + Quick Reconnect are enabled only after the user taps the trusted-device button.
+  • Google is needed again only for a fresh Contacts API token when required.
+
+AFTER UPLOAD
+Open app online > Settings > App Updates > Check for Updates > Update Now.
+Close and reopen the installed PWA once.
+Then Settings > Trusted Device Mode > Enable Trusted Device Mode.
+
+Suggested commit:
+feat: birthday v5.2 final unified safety trusted device and reminders

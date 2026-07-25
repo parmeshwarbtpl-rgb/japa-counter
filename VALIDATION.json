@@ -1,0 +1,40 @@
+{
+  "syntax": {
+    "Birthday-Reminder-v5.2-Final/birthday-reminders.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Birthday-Reminder-v5.2-Final/app-v52-enhancements.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Birthday-Reminder-v5.2-Final/ecosystem-v52.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Birthday-Reminder-v5.2-Final/sw.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Naam-Jaap-v2.9.7/trusted-device.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Naam-Jaap-v2.9.7/ecosystem.js": {
+      "ok": true,
+      "error": ""
+    },
+    "Naam-Jaap-v2.9.7/sw.js": {
+      "ok": true,
+      "error": ""
+    }
+  },
+  "sanity": {
+    "japa_v297_title": true,
+    "japa_trusted_loaded": true,
+    "japa_ecosystem_loaded": true,
+    "japa_config_v297": true,
+    "birthday_ecosystem_cached": true,
+    "birthday_ecosystem_injected": true
+  }
+}

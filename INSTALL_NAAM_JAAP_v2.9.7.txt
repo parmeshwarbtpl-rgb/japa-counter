@@ -1,0 +1,30 @@
+Naam Jaap Counter v2.9.7 — Unified Safety + Trusted Device
+
+UPLOAD / REPLACE
+1. index.html             REPLACE
+2. config.js              REPLACE
+3. sw.js                  REPLACE
+4. trusted-device.js      NEW
+5. ecosystem.js           NEW
+
+NO APPS SCRIPT CHANGE REQUIRED.
+
+WHAT CHANGES
+- Installed/reopened app no longer blocks on Google login if this device has a
+  previously verified local profile.
+- Trusted local profile validity: up to 30 days after a verified sign-in.
+- Counts remain usable in local mode and queue for later cloud sync.
+- If Google cloud authentication expires, app remains open; use “Reconnect Sync”
+  when convenient.
+- Google Sign-In button uses FedCM button auto-select for returning users where supported.
+- Shared Data Safety Standard card matches Birthday Reminder.
+- App Family integration remains navigation-only; no cross-app personal-data transfer.
+
+IMPORTANT
+Cloud sync cannot be permanently authenticated by storing a Google token in the
+browser. A fresh Google interaction can still be required if Google expires or
+revokes the credential. This update removes repeated login as an app-opening
+requirement; it does not bypass Google security.
+
+Suggested commit:
+feat: naam jaap v2.9.7 unified safety and trusted device access
