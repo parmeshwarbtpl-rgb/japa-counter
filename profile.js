@@ -1,4 +1,4 @@
-// Naam Jaap Counter v2.9.10 — profile header and account integration.
+// Naam Jaap Counter v2.9.11 — clearer profile photo, larger avatars and face-focused crop.
 
 (() => {
     const PROFILE_KEY = "naam-jaap-local-profile-v1";
@@ -391,9 +391,19 @@
 
             .local-profile-preview,
             [data-user-initial].has-local-profile-photo {
-                background-position: center;
                 background-size: cover;
                 background-repeat: no-repeat;
+            }
+
+            .local-profile-preview {
+                background-position: center 30%;
+            }
+
+            .account-initial.has-local-profile-photo,
+            .account-avatar.has-local-profile-photo {
+                background-position: center 28%;
+                image-rendering: auto;
+                -webkit-font-smoothing: antialiased;
             }
 
             .local-profile-preview {
@@ -513,6 +523,29 @@
             .account-initial.has-local-profile-photo,
             .account-avatar.has-local-profile-photo {
                 color: transparent;
+                overflow: hidden;
+                border: 2px solid rgba(255, 255, 255, 0.94);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+            }
+
+            .account-initial.has-local-profile-photo {
+                width: 48px;
+                height: 48px;
+                flex: 0 0 48px;
+                border-radius: 50%;
+            }
+
+            .account-avatar.has-local-profile-photo {
+                width: 68px;
+                height: 68px;
+                flex: 0 0 68px;
+                border-radius: 50%;
+                background-color: #fff4e8;
+            }
+
+            .account-chip:has(.account-initial.has-local-profile-photo) {
+                min-height: 60px;
+                padding: 5px 12px 5px 5px;
             }
 
             @media (max-width: 520px) {
@@ -526,13 +559,19 @@
                 }
 
                 .account-chip {
-                    max-width: 48vw;
+                    max-width: 52vw;
                     gap: 7px;
+                }
+
+                .account-initial.has-local-profile-photo {
+                    width: 44px;
+                    height: 44px;
+                    flex-basis: 44px;
                 }
 
                 .account-chip-name,
                 .account-chip-status {
-                    max-width: 118px;
+                    max-width: 124px;
                 }
 
                 .account-chip-status {
@@ -619,7 +658,7 @@
                     </button>
 
                     <small class="field-help">
-                        Stored only on this device · max source file 10 MB
+                        Stored only on this device · face-focused crop · max source file 10 MB
                     </small>
                 </div>
             </div>
@@ -917,30 +956,43 @@
                     sourceHeight
                 );
 
-            const sx =
+            // Portrait photos usually place the face in the upper half.
+            // Bias the square crop upward so the face remains prominent
+            // instead of centering too much torso/body inside the avatar.
+            const horizontalOverflow =
                 Math.max(
                     0,
-                    Math.floor(
-                        (
-                            sourceWidth -
-                            side
-                        ) / 2
-                    )
+                    sourceWidth -
+                    side
+                );
+
+            const verticalOverflow =
+                Math.max(
+                    0,
+                    sourceHeight -
+                    side
+                );
+
+            const sx =
+                Math.floor(
+                    horizontalOverflow /
+                    2
                 );
 
             const sy =
-                Math.max(
-                    0,
-                    Math.floor(
-                        (
-                            sourceHeight -
-                            side
-                        ) / 2
+                sourceHeight >
+                sourceWidth
+                    ? Math.floor(
+                        verticalOverflow *
+                        0.18
                     )
-                );
+                    : Math.floor(
+                        verticalOverflow /
+                        2
+                    );
 
             const size =
-                512;
+                768;
 
             const canvas =
                 document.createElement(
@@ -960,6 +1012,12 @@
                         alpha: false,
                     }
                 );
+
+            context.imageSmoothingEnabled =
+                true;
+
+            context.imageSmoothingQuality =
+                "high";
 
             context.fillStyle =
                 "#ffffff";
@@ -987,7 +1045,7 @@
                 await canvasToBlob(
                     canvas,
                     "image/webp",
-                    0.84
+                    0.92
                 );
 
             if (webp) {
@@ -998,7 +1056,7 @@
                 await canvasToBlob(
                     canvas,
                     "image/jpeg",
-                    0.86
+                    0.92
                 );
 
             if (!jpeg) {

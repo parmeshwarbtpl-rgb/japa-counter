@@ -1,0 +1,48 @@
+Naam Jaap Counter v2.9.11 — Clear Profile Photo
+
+FIXED
+- Header profile photo increased from the old small avatar to 48x48 px.
+- Small mobile screens use 44x44 px instead of 30x30 px.
+- Signed-in Account photo is 68x68 px.
+- Profile photos use circular white border + subtle shadow for clarity.
+- Portrait photo cropping is face-focused (upper-biased crop).
+- Optimized profile image increased from 512x512 to 768x768.
+- WebP/JPEG output quality increased to 92%.
+- Canvas high-quality image smoothing enabled.
+
+IMPORTANT AFTER UPDATE
+Your current saved profile photo was already processed by the older crop algorithm.
+To receive the new face-focused crop:
+1. Settings > Profile.
+2. Tap Choose Photo.
+3. Select the ORIGINAL photo again.
+You do NOT need to remove the old photo first; choosing it again replaces it.
+
+VERSION
+- Naam Jaap Counter v2.9.11
+- About + App Updates synced to v2.9.11.
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. profile.js
+5. app-updates.js
+
+KEEP
+- trusted-device.js
+- ecosystem.js
+
+No Google Apps Script changes.
+
+TEST
+1. Upload 5 files.
+2. Close/reopen the installed PWA.
+3. Settings > Profile > Choose Photo.
+4. Select the original photo again.
+5. Verify header avatar is larger and face is clearer.
+6. Verify Signed-in Account avatar.
+7. Close/reopen app and confirm photo remains.
+
+Suggested commit:
+fix: improve profile photo clarity crop and avatar size v2.9.11
