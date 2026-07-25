@@ -1,0 +1,62 @@
+Naam Jaap Counter v2.9.13 — Dashboard Polish & Sync Confidence
+
+NEW DASHBOARD FEATURES
+1. Live Sync Status
+   - Synced
+   - Sync Pending
+   - Offline Safe
+   - Sync Retry
+   Uses the same real connection state already used by the app.
+
+2. Daily Jaap Streak
+   - Counts consecutive days with Jaap activity.
+   - Uses recent authenticated history when available.
+   - Also keeps a local activity-date cache for offline/trusted-device use.
+   - The streak is across Jaap activity in the app, not a combined mantra count.
+
+3. Better Daily Goal Progress
+   - Clear Today: X / Y Mala summary.
+   - Exact Jaap remaining.
+   - Goal-complete visual state.
+   - Existing selected-mantra goal logic is preserved.
+
+4. Mala Complete Celebration
+   - Subtle centred celebration when a Mala completes.
+   - Separate Daily Goal Complete celebration.
+   - Existing toast + vibration behaviour remains.
+
+IMPORTANT
+- No Google Apps Script changes.
+- No change to selected-mantra isolation.
+- No combined all-mantra dashboard total added.
+- Existing Profile Photo, Manual Crop, Trusted Device, Reminder tones,
+  App Updates, PWA install, Data Safety and Birthday integration remain.
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. app-updates.js
+5. dashboard-polish.js   NEW
+
+KEEP EXISTING
+- profile.js
+- trusted-device.js
+- ecosystem.js
+- app.js
+- history.js
+- ui.js
+
+TEST
+1. Upload the 5 files.
+2. Close and reopen installed PWA.
+3. Dashboard should show Sync + Daily Streak cards.
+4. Tap +1:
+   - streak should become active for today.
+   - Sync should briefly show pending/syncing then Synced.
+5. Complete 108 Jaap to test Mala celebration.
+6. Daily Goal card should show exact Mala and remaining Jaap.
+7. About and App Updates should show v2.9.13.
+
+Suggested commit:
+feat: add dashboard sync confidence streak goal polish and mala celebration v2.9.13
