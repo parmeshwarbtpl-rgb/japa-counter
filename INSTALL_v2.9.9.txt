@@ -1,0 +1,54 @@
+Naam Jaap Counter v2.9.9 — Profile Photo + Status
+
+NEW
+- Settings > Profile Settings card.
+- Choose / replace profile photo.
+- Remove profile photo.
+- Editable local Display Name.
+- Editable local Status.
+- Profile photo shown in account avatar/header avatar.
+- Local Display Name shown instead of Google display name where the UI shows your name.
+- Status shown in the Signed-in Account card.
+- Photo is resized/cropped to a 512x512 square before saving.
+- Max source image: 10 MB.
+- Profile photo stored in device IndexedDB.
+- Display Name + Status stored in device localStorage.
+
+DATA SAFETY
+- These profile customisations are device-local only.
+- Verified Google email/account identity is NOT changed.
+- Google Sheets ownership/user ID is NOT changed.
+- No profile photo or local status is uploaded to Apps Script / Sheets.
+- Sign Out and cloud sync behaviour remain unchanged.
+
+VERSION
+- v2.9.9
+- Existing App Updates checker remains.
+- Existing Trusted Device, Data Safety, Birthday integration, reminders and PWA install remain.
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. profile.js  NEW
+
+Existing files must remain in the repo:
+- trusted-device.js
+- ecosystem.js
+- app-updates.js
+
+No Google Apps Script change required.
+
+TEST
+1. Upload all 4 files.
+2. Close and reopen installed PWA.
+3. Settings > Profile.
+4. Choose Photo.
+5. Enter Display Name and Status.
+6. Save Profile & Status.
+7. Header/account avatar and account name should update.
+8. Close and reopen PWA — profile should still be there.
+9. About / App Updates should show v2.9.9.
+
+Suggested commit:
+feat: add device local profile photo name and status v2.9.9
