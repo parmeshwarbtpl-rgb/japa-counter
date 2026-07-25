@@ -1,0 +1,48 @@
+Naam Jaap Counter v2.9.10 — Profile Header Integration
+
+WHAT IS FIXED
+- Top-right account area now shows:
+  • Profile Photo
+  • Display Name
+  • Status
+- Signed-in Account card now shows:
+  • Profile Photo
+  • Display Name
+  • Local Status
+  • Verified Google email
+  • Registered device information
+- Long name/status text is safely truncated in the mobile header.
+- Profile changes update both places immediately.
+- Saved device profile still persists after closing/reopening the installed PWA.
+
+VERSION
+- About: v2.9.10
+- App Updates: v2.9.10
+- PWA cache: v2.9.10
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. profile.js
+5. app-updates.js
+
+KEEP EXISTING
+- trusted-device.js
+- ecosystem.js
+
+NO GOOGLE APPS SCRIPT CHANGE REQUIRED.
+
+TEST
+1. Upload all 5 files.
+2. Close the installed PWA completely and reopen it.
+3. Settings > Profile.
+4. Set photo, Display Name and Status.
+5. Tap Save Profile & Status.
+6. Top-right header should immediately show photo + name + status.
+7. Signed-in Account card should show the same photo + name + status.
+8. Close/reopen app and confirm the profile remains.
+9. About / App Updates should show v2.9.10.
+
+Suggested commit:
+feat: integrate profile photo name and status into header v2.9.10

@@ -1,4 +1,4 @@
-// Naam Jaap Counter v2.9.9 — device-local profile photo, display name and status.
+// Naam Jaap Counter v2.9.10 — profile header and account integration.
 
 (() => {
     const PROFILE_KEY = "naam-jaap-local-profile-v1";
@@ -461,6 +461,55 @@
                 font-size: 0.82rem;
             }
 
+            .account-chip {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                max-width: min(280px, 48vw);
+            }
+
+            .account-chip-copy {
+                display: flex;
+                min-width: 0;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .account-chip-name {
+                display: block;
+                max-width: 180px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-weight: 800;
+                line-height: 1.15;
+            }
+
+            .account-chip-status {
+                display: block;
+                max-width: 180px;
+                margin-top: 2px;
+                overflow: hidden;
+                color: #787d84;
+                font-size: 0.69rem;
+                line-height: 1.15;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .account-local-status {
+                margin: 3px 0 5px;
+                color: #d85d00;
+                font-size: 0.84rem;
+                font-weight: 700;
+                line-height: 1.35;
+            }
+
+            .account-profile h3 {
+                margin-bottom: 0;
+            }
+
             .account-initial.has-local-profile-photo,
             .account-avatar.has-local-profile-photo {
                 color: transparent;
@@ -474,6 +523,20 @@
 
                 .local-profile-photo-actions {
                     width: 100%;
+                }
+
+                .account-chip {
+                    max-width: 48vw;
+                    gap: 7px;
+                }
+
+                .account-chip-name,
+                .account-chip-status {
+                    max-width: 118px;
+                }
+
+                .account-chip-status {
+                    font-size: 0.62rem;
                 }
             }
         `;

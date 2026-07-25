@@ -9,14 +9,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <title>Naam Jaap Counter v2.9.9</title>
+    <title>Naam Jaap Counter v2.9.10</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon-192.png?v=299" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-192.png?v=299">
-    <link rel="stylesheet" href="style.css?v=299">
-    <link rel="stylesheet" href="mala-goal.css?v=299">
-    <link rel="stylesheet" href="background-music.css?v=299">
+    <link rel="icon" href="icon-192.png?v=2910" sizes="192x192">
+    <link rel="apple-touch-icon" href="icon-192.png?v=2910">
+    <link rel="stylesheet" href="style.css?v=2910">
+    <link rel="stylesheet" href="mala-goal.css?v=2910">
+    <link rel="stylesheet" href="background-music.css?v=2910">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -310,7 +310,10 @@
             </div>
             <button id="accountButton" class="account-chip" type="button" aria-label="Open account settings">
                 <span class="account-initial" data-user-initial>G</span>
-                <span class="account-chip-name" data-user-name>Google User</span>
+                <span class="account-chip-copy">
+                    <span class="account-chip-name" data-user-name>Google User</span>
+                    <span class="account-chip-status" data-local-profile-status>Naam Jaap • Trusted Device</span>
+                </span>
             </button>
         </header>
 
@@ -715,6 +718,7 @@
                         <div>
                             <p class="eyebrow">Signed-in Account</p>
                             <h3 data-user-name>Google User</h3>
+                            <p class="account-local-status" data-local-profile-status>Naam Jaap • Trusted Device</p>
                             <p data-user-email></p>
                             <p id="accountDeviceKey" class="device-key">Registered device</p>
                         </div>
@@ -759,7 +763,7 @@
 
                 <section class="card about-card">
                     <p class="eyebrow">About</p>
-                    <h3 id="aboutAppVersion">Naam Jaap Counter v2.9.9</h3>
+                    <h3 id="aboutAppVersion">Naam Jaap Counter v2.9.10</h3>
                     <p>Frontend: HTML, CSS and Vanilla JavaScript</p>
                     <p>Backend: Google Apps Script and Google Sheets</p>
                 </section>
@@ -851,23 +855,23 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="config.js?v=299"></script>
-    <script src="offline.js?v=299"></script>
-    <script src="api.js?v=299"></script>
-    <script src="auth.js?v=299"></script>
-    <script src="trusted-device.js?v=299"></script>
-    <script src="profile.js?v=299"></script>
-    <script src="settings.js?v=299"></script>
-    <script src="history.js?v=299"></script>
-    <script src="ui.js?v=299"></script>
-    <script src="reminder.js?v=299"></script>
-    <script src="app.js?v=299"></script>
-    <script src="custom-mantras.js?v=299"></script>
-    <script src="ecosystem.js?v=299"></script>
-    <script src="app-updates.js?v=299"></script>
-    <audio id="templeBackgroundAudio" src="temple-music.mp3?v=299" preload="none" loop></audio>
-    <audio id="reminderToneAudio" src="reminder-temple-bell.wav?v=299" preload="auto" playsinline></audio>
-    <script src="background-music.js?v=299"></script>
+    <script src="config.js?v=2910"></script>
+    <script src="offline.js?v=2910"></script>
+    <script src="api.js?v=2910"></script>
+    <script src="auth.js?v=2910"></script>
+    <script src="trusted-device.js?v=2910"></script>
+    <script src="profile.js?v=2910"></script>
+    <script src="settings.js?v=2910"></script>
+    <script src="history.js?v=2910"></script>
+    <script src="ui.js?v=2910"></script>
+    <script src="reminder.js?v=2910"></script>
+    <script src="app.js?v=2910"></script>
+    <script src="custom-mantras.js?v=2910"></script>
+    <script src="ecosystem.js?v=2910"></script>
+    <script src="app-updates.js?v=2910"></script>
+    <audio id="templeBackgroundAudio" src="temple-music.mp3?v=2910" preload="none" loop></audio>
+    <audio id="reminderToneAudio" src="reminder-temple-bell.wav?v=2910" preload="auto" playsinline></audio>
+    <script src="background-music.js?v=2910"></script>
 
     <script>
         (() => {
