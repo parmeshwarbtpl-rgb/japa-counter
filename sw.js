@@ -1,26 +1,27 @@
-const CACHE_NAME = "naam-jaap-counter-v2-9-7-unified-safety-trusted-device";
+const CACHE_NAME = "naam-jaap-counter-v2-9-8-app-update-system";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=297",
-    "./mala-goal.css?v=297",
-    "./background-music.css?v=297",
-    "./config.js?v=297",
-    "./offline.js?v=297",
-    "./api.js?v=297",
-    "./auth.js?v=297",
-    "./trusted-device.js?v=297",
-    "./settings.js?v=297",
-    "./history.js?v=297",
-    "./ui.js?v=297",
-    "./reminder.js?v=297",
-    "./app.js?v=297",
-    "./custom-mantras.js?v=297",
-    "./ecosystem.js?v=297",
-    "./background-music.js?v=297",
-    "./temple-music.mp3?v=297",
-    "./reminder-temple-bell.wav?v=297",
-    "./reminder-morning-chime.wav?v=297",
+    "./style.css?v=298",
+    "./mala-goal.css?v=298",
+    "./background-music.css?v=298",
+    "./config.js?v=298",
+    "./offline.js?v=298",
+    "./api.js?v=298",
+    "./auth.js?v=298",
+    "./trusted-device.js?v=298",
+    "./settings.js?v=298",
+    "./history.js?v=298",
+    "./ui.js?v=298",
+    "./reminder.js?v=298",
+    "./app.js?v=298",
+    "./custom-mantras.js?v=298",
+    "./ecosystem.js?v=298",
+    "./app-updates.js?v=298",
+    "./background-music.js?v=298",
+    "./temple-music.mp3?v=298",
+    "./reminder-temple-bell.wav?v=298",
+    "./reminder-morning-chime.wav?v=298",
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
@@ -32,6 +33,13 @@ self.addEventListener("install", event => {
             .then(cache => cache.addAll(APP_SHELL))
             .then(() => self.skipWaiting())
     );
+});
+
+
+self.addEventListener("message", event => {
+    if (event.data?.type === "SKIP_WAITING") {
+        self.skipWaiting();
+    }
 });
 
 self.addEventListener("activate", event => {

@@ -1,0 +1,40 @@
+Naam Jaap Counter v2.9.8 — App Update System
+
+FIX
+The About card showed the version number but did not provide the Birthday Reminder-style
+version/update controls.
+
+NEW
+- About version is synchronized from APP_CONFIG.
+- New Settings > App Updates card.
+- Current version badge.
+- Check for Updates button.
+- Update Now button appears when a newer published config.js version is detected.
+- Quiet update check shortly after startup.
+- PWA service worker cache bumped to v2.9.8.
+- Existing Trusted Device, Data Safety, App Family, reminders and install features remain.
+
+UPLOAD / REPLACE
+1. index.html
+2. config.js
+3. sw.js
+4. app-updates.js  (NEW)
+
+No Google Apps Script change required.
+
+IMPORTANT
+Do not replace trusted-device.js or ecosystem.js if the currently uploaded v2.9.7
+versions are already working; this package references those existing files.
+
+TEST
+1. Upload all 4 files.
+2. Close/reopen the PWA.
+3. Settings:
+   - App Updates
+   - Version & Updates
+   - badge v2.9.8
+   - Check for Updates
+4. About must show Naam Jaap Counter v2.9.8.
+
+Suggested commit:
+feat: add app update checker and synced About version v2.9.8
