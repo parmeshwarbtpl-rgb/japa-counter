@@ -1,0 +1,49 @@
+Birthday Reminder — Reminder Settings Enhancement
+
+FEATURES
+- Birthday reminder master switch.
+- Reminder choices:
+  • On Birthday
+  • 1 Day Before
+  • 3 Days Before
+  • 7 Days Before
+- Browser notification permission + Test Reminder button.
+- Local app-open birthday notifications.
+- Existing single-contact and Export All .ics calendar files automatically include
+  the selected reminder choices as VALARM entries.
+- Extra “Export Calendar with Reminders” button in Settings.
+- Notification click reopens/focuses Birthday Reminder.
+- Reminder settings and notification history stay only on the device.
+
+PRIVACY / RELIABILITY
+- No Firebase, Google Sheets, Apps Script, owner server or cloud scheduler added.
+- App-open notifications work only while the browser/PWA is running enough for
+  JavaScript to execute.
+- For reliable reminders when the app is fully closed, export the .ics file and
+  import it into the phone calendar. The phone calendar then owns the reminder.
+
+GITHUB UPDATE
+Upload/replace only:
+1. birthday-reminders.js   (NEW)
+2. sw.js                   (REPLACE)
+
+Do NOT change index.html for this enhancement.
+The updated service worker injects birthday-reminders.js into the app locally.
+
+AFTER UPLOAD
+1. Open Birthday Reminder while online.
+2. If “New version available” appears, tap Update Now.
+3. Otherwise use Settings > App Updates > Check for Updates.
+4. Reload/reopen the app once.
+5. Go to Settings > Birthday Reminders.
+6. Enable Birthday Alerts.
+7. Tap Enable Notifications.
+8. Choose On Birthday / 1 / 3 / 7 days before.
+9. Tap Test Reminder.
+10. Export calendar and import it into the phone calendar for closed-app reliability.
+
+ROLLBACK
+If needed, restore the previous sw.js and delete birthday-reminders.js.
+
+Suggested commit message:
+feat: add privacy-first birthday reminder settings and calendar alarms
