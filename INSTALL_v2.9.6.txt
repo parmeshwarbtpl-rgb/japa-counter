@@ -1,0 +1,26 @@
+Naam Jaap Counter v2.9.6 — More Apps Integration
+
+WHAT CHANGED
+- Added a polished More Apps card in Settings.
+- Added direct link to Birthday Reminder:
+  https://parmjee2026.github.io/Birthday-Reminder-Web-App/
+- Updated app version to v2.9.6.
+- Updated PWA cache keys from v295 to v296.
+
+UPLOAD / REPLACE IN GITHUB
+1. index.html
+2. config.js
+3. sw.js
+
+Google Apps Script:
+- No change required.
+- No redeployment required.
+
+Suggested commit message:
+feat: add Birthday Reminder link and More Apps integration v2.9.6
+
+After upload:
+- Close the installed PWA/browser tab completely.
+- Reopen the app.
+- If an old version is still visible, refresh once.
+- Go to Settings > More Apps and test Birthday Reminder.
