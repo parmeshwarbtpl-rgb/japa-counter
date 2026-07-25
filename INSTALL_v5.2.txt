@@ -1,0 +1,57 @@
+Birthday Reminder v5.2 — Complete Frontend Update
+
+INCLUDED
+1. Birthday Reminder Settings
+   - On Birthday
+   - 1 Day Before
+   - 3 Days Before
+   - 7 Days Before
+   - Browser notification permission
+   - Test Reminder
+   - Calendar export with VALARM reminders
+
+2. Version Update System
+   - Visible app version upgraded to v5.2
+   - Existing Check for Updates / Update Now flow remains
+   - Service worker cache upgraded to birthday-reminder-static-v5.2
+
+3. Install Web App / PWA
+   - Existing Login/Topbar install options remain
+   - New Settings > App & More > Install Web App card
+   - Shows PWA Ready / Installed state
+   - iPhone/iPad fallback: Share > Add to Home Screen
+
+4. Profile Photo + Status Update
+   - Existing Profile Settings are preserved
+   - Profile photo stays only on this device
+   - Name + Status stay only on this device
+   - Save button is clarified as “Save Profile & Status”
+
+PRIVACY
+- No Firebase
+- No Google Sheets
+- No Apps Script
+- No owner-controlled contact database
+- Reminder preferences remain local on the device
+
+UPLOAD / REPLACE IN GITHUB
+1. birthday-reminders.js      NEW (or replace if already uploaded)
+2. app-v52-enhancements.js    NEW
+3. sw.js                      REPLACE
+
+index.html does not need to be replaced for this package.
+The v5.2 service worker upgrades the current HTML response and injects the two modules.
+
+AFTER UPLOAD
+1. Open Birthday Reminder online.
+2. Settings > App Updates > Check for Updates.
+3. Tap Update Now if shown.
+4. Close and reopen the PWA/browser once.
+5. Confirm Settings:
+   - Profile Settings
+   - Birthday Reminders
+   - App Updates = v5.2
+   - Install Web App
+
+Suggested commit:
+feat: birthday reminder v5.2 reminders install updates and profile
