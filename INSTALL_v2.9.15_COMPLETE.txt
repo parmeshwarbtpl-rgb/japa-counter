@@ -1,0 +1,51 @@
+Naam Jaap Counter v2.9.15 — COMPLETE CUMULATIVE FIX
+
+WHY THIS PACKAGE
+The live GitHub repo is still on v2.9.13. The previous v2.9.15 package assumed
+mobile-ui-fix.js from v2.9.14 was already uploaded. This complete package includes
+that missing dependency too.
+
+UPLOAD / REPLACE ALL 6 FILES
+1. index.html
+2. config.js
+3. sw.js
+4. app-updates.js
+5. mobile-ui-fix.js      NEW
+6. sync-settings.js      NEW
+
+EXPECTED RESULT
+
+DASHBOARD
+- Sync card is removed.
+- Daily Streak remains.
+- Mobile header is compact.
+- Profile photo + name fit properly.
+- Profile status is not shown in the narrow mobile header.
+
+SETTINGS
+- New Cloud Sync / Google Sheets Sync card:
+    Synced
+    Google Sheets
+  or
+    Offline Safe
+    Saved on device
+
+VERSION
+- About: v2.9.15
+- App Updates badge: v2.9.15
+- config APP_VERSION: 2.9.15-sync-status-settings
+- Service worker cache: v2.9.15
+
+NO GOOGLE APPS SCRIPT CHANGE REQUIRED.
+
+AFTER UPLOAD
+1. Confirm all 6 files are in the repo.
+2. Open the web app once in Chrome.
+3. Reload once.
+4. Close the installed PWA completely.
+5. Reopen the PWA.
+6. Settings should show v2.9.15.
+7. Dashboard should no longer show the Sync card.
+
+Suggested commit:
+fix: apply complete v2.9.15 mobile header and sync settings update
