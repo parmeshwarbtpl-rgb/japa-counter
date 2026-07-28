@@ -24,6 +24,198 @@
       ? "japa"
       : "birthday";
 
+  const SHARED_IDENTITY_KEY =
+    "myApps.displayIdentity.v1";
+
+  function readSharedIdentity() {
+    try {
+      const value = JSON.parse(
+        localStorage.getItem(
+          SHARED_IDENTITY_KEY
+        ) || "{}"
+      );
+
+      return {
+        name: usableName(value.name)
+      };
+    } catch (error) {
+      console.warn(
+        "Shared display identity could not be read:",
+        error
+      );
+
+      return {
+        name: ""
+      };
+    }
+  }
+
+  function saveSharedIdentity(name) {
+    const safeName =
+      usableName(name).slice(0, 80);
+
+    if (!safeName) return;
+
+    try {
+      localStorage.setItem(
+        SHARED_IDENTITY_KEY,
+        JSON.stringify({
+          name: safeName,
+          savedAt: Date.now()
+        })
+      );
+    } catch (error) {
+      console.warn(
+        "Shared display identity could not be saved:",
+        error
+      );
+    }
+  }
+
+  function saveBirthdayIdentity(name) {
+    if (current !== "birthday") return;
+
+    const safeName =
+      usableName(name).slice(0, 80);
+
+    if (!safeName) return;
+
+    try {
+      const key =
+        "birthdayReminder.profile.v1";
+
+      const profile = JSON.parse(
+        localStorage.getItem(key) || "{}"
+      );
+
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          name: safeName,
+          status:
+            String(
+              profile.status || ""
+            ).trim()
+        })
+      );
+
+      if (
+        typeof state !== "undefined" &&
+        state
+      ) {
+        state.userName = safeName;
+
+        if (
+          typeof saveDevicePreferences ===
+          "function"
+        ) {
+          saveDevicePreferences();
+        }
+
+        if (
+          typeof renderUserName ===
+          "function"
+        ) {
+          renderUserName();
+        }
+      }
+    } catch (error) {
+      console.warn(
+        "Birthday display identity could not be saved:",
+        error
+      );
+    }
+  }
+
+  function consumeIdentityHandoff() {
+    const raw =
+      window.location.hash
+        .replace(/^#/, "");
+
+    if (!raw) return;
+
+    const params =
+      new URLSearchParams(raw);
+
+    const incomingName =
+      usableName(
+        params.get("suite_name")
+      );
+
+    if (incomingName) {
+      saveSharedIdentity(incomingName);
+      saveBirthdayIdentity(incomingName);
+    }
+
+    if (
+      params.has("suite_name") ||
+      params.has("suite_enter")
+    ) {
+      params.delete("suite_name");
+      params.delete("suite_enter");
+
+      const cleanHash =
+        params.toString();
+
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname +
+          window.location.search +
+          (
+            cleanHash
+              ? `#${cleanHash}`
+              : ""
+          )
+      );
+    }
+  }
+
+  function switchWithIdentity(link) {
+    const identity =
+      readIdentity();
+
+    const safeName =
+      usableName(identity.name);
+
+    if (safeName) {
+      saveSharedIdentity(safeName);
+    }
+
+    const target =
+      new URL(
+        link.href,
+        window.location.href
+      );
+
+    target.searchParams.set(
+      "enter",
+      "1"
+    );
+
+    const fragment =
+      new URLSearchParams();
+
+    if (safeName) {
+      fragment.set(
+        "suite_name",
+        safeName
+      );
+    }
+
+    fragment.set(
+      "suite_enter",
+      "1"
+    );
+
+    target.hash =
+      fragment.toString();
+
+    window.location.assign(
+      target.toString()
+    );
+  }
+
   function cleanText(value) {
     return String(value || "")
       .replace(/^welcome\s*,?\s*/i, "")
@@ -74,6 +266,9 @@
     const name =
       usableName(profile.name) ||
       usableName(
+        readSharedIdentity().name
+      ) ||
+      usableName(
         textFrom([
           "#sidebarUserName",
           "#dashboardWelcome"
@@ -109,7 +304,10 @@
           "[data-user-name]"
         ])
       ) ||
-      "Guest";
+      usableName(
+        readSharedIdentity().name
+      ) ||
+      "User";
 
     const status =
       textFrom([
@@ -361,6 +559,8 @@
   }
 
   function setup() {
+    consumeIdentityHandoff();
+
     document.getElementById("headerAppSwitcherButton")?.remove();
     document.getElementById("myAppSwitcherLayer")?.remove();
 
@@ -424,6 +624,14 @@
       .forEach((link) => {
         link.removeAttribute("target");
         link.removeAttribute("rel");
+
+        link.addEventListener(
+          "click",
+          (event) => {
+            event.preventDefault();
+            switchWithIdentity(link);
+          }
+        );
       });
 
     if (birthdayHeaderButton) {

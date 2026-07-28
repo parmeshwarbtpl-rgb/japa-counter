@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "naam-jaap-counter-v2-9-15-personal-apps-home";
+  "naam-jaap-counter-v2-9-15-identity-handoff";
 
 const APP_SHELL = [
   "./",

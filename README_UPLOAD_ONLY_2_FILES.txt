@@ -1,5 +1,5 @@
-NAAM JAAP v2.9.15 — PERSONAL APPS HOME
-============================================
+NAAM JAAP v2.9.15 — IDENTITY HANDOFF FIX
+=============================================
 
 Replace only:
 1. ecosystem.js
@@ -7,23 +7,23 @@ Replace only:
 
 Do not edit index.html.
 
-Launcher header now shows:
-- Welcome
-- signed-in user name
-- user status
-- profile photo when available
-- initials fallback
+What this fixes:
+- when Birthday Reminder is opened from Naam Jaap,
+  the signed-in Naam Jaap display name is passed securely
+- Birthday saves the display name on that device
+- Birthday then shows Parmeshwar and initial P
+  instead of Welcome back and B
 
-Removed from launcher header:
-- My App Suite
-- Share
-- Install
-- common-home badge
+Privacy:
+- only the display name is passed
+- it uses a URL fragment (#), which is not sent to GitHub/server
+- the fragment is removed immediately
+- no shared database or backend was added
 
-After upload:
-1. Wait for GitHub Pages deployment.
-2. Close Naam Jaap completely.
-3. Open in Chrome and refresh twice.
-4. Reopen the installed app.
-
-Auth, Apps Script, Google Sheets, count/history and reminders are unchanged.
+Unchanged:
+- Google Sign-In
+- Apps Script
+- Google Sheets sync
+- jaap counts/history
+- reminders
+- user activity data
