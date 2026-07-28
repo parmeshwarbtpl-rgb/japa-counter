@@ -1,111 +1,594 @@
 (() => {
   "use strict";
 
-  if (!document.getElementById("embeddedSuiteDropInStyles")) {
+  if (!document.getElementById("personalAppsHomeStyles")) {
     const style = document.createElement("style");
-    style.id = "embeddedSuiteDropInStyles";
-    style.textContent = "/* Embedded My App Suite */\n.embedded-suite-screen[hidden]{display:none!important}\n.embedded-suite-screen{position:fixed;inset:0;z-index:30000;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(circle at 10% -5%,#fff2df 0,transparent 30%),#f6f7fb;color:#1f2937;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}\n.embedded-suite-screen *{box-sizing:border-box}.embedded-suite-shell{width:min(760px,100%);min-height:100%;margin:0 auto;padding-bottom:calc(32px + env(safe-area-inset-bottom))}\n.embedded-suite-hero{position:relative;overflow:hidden;padding:calc(24px + env(safe-area-inset-top)) 22px 30px;border-radius:0 0 30px 30px;background:linear-gradient(135deg,#ff6600,#ff9200);color:#fff;box-shadow:0 14px 34px rgba(217,95,0,.16)}\n.embedded-suite-hero:after{content:\"\";position:absolute;width:190px;height:190px;right:-75px;bottom:-95px;border:2px solid rgba(255,255,255,.16);border-radius:50%}\n.embedded-suite-hero-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:16px}.embedded-suite-brand{display:flex;align-items:center;gap:14px}.embedded-suite-brand-mark{display:grid;width:58px;height:58px;flex:0 0 58px;place-items:center;border:2px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(255,255,255,.12);font-size:28px;backdrop-filter:blur(6px)}\n.embedded-suite-brand h1,.embedded-suite-brand p{margin:0}.embedded-suite-brand h1{color:#fff;font-size:clamp(24px,6vw,34px);letter-spacing:-.035em}.embedded-suite-brand p{margin-top:4px;color:rgba(255,255,255,.88);font-size:12px;line-height:1.45}.embedded-suite-hero-actions{display:flex;gap:8px}.embedded-suite-hero-action{min-height:38px;border:1px solid rgba(255,255,255,.78);border-radius:999px;padding:0 12px;background:rgba(255,255,255,.95);color:#d95f00;font-size:10px;font-weight:900;cursor:pointer}\n.embedded-suite-identity{position:relative;z-index:1;display:inline-flex;align-items:center;gap:7px;margin-top:17px;border:1px solid rgba(255,255,255,.34);border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.11);color:rgba(255,255,255,.96);font-size:9px;font-weight:850;backdrop-filter:blur(5px)}.embedded-suite-dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.14)}\n.embedded-suite-content{padding:20px 18px}.embedded-suite-welcome{margin-bottom:14px}.embedded-suite-welcome h2,.embedded-suite-welcome p{margin:0}.embedded-suite-welcome h2{color:#1f2937;font-size:18px}.embedded-suite-welcome p{margin-top:4px;color:#6b7280;font-size:11px;line-height:1.5}.embedded-suite-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}\n.embedded-suite-card{position:relative;display:grid;width:100%;min-height:235px;overflow:hidden;border:1px solid #eadfd2;border-radius:24px;padding:18px;background:#fff;color:inherit;text-align:left;text-decoration:none;font:inherit;box-shadow:0 10px 28px rgba(38,33,27,.06);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.embedded-suite-card:hover,.embedded-suite-card:focus-visible{transform:translateY(-3px);box-shadow:0 16px 34px rgba(38,33,27,.1);outline:none}.embedded-suite-card:active{transform:scale(.985)}\n.embedded-suite-current-badge{position:absolute;top:15px;right:15px;border-radius:999px;padding:5px 8px;background:#fff1e3;color:#d95f00;font-size:8px;font-weight:900}.embedded-suite-app-icon{display:grid;width:62px;height:62px;place-items:center;border-radius:19px;background:#fff0e0;font-size:31px}.embedded-suite-card.japa .embedded-suite-app-icon{background:#fff5e8;color:#d95f00;font-size:35px;font-weight:900}.embedded-suite-label{display:inline-flex;width:fit-content;align-items:center;gap:5px;margin-top:13px;border-radius:999px;padding:5px 8px;background:#fff1e3;color:#d95f00;font-size:8px;font-weight:900}.embedded-suite-card h3{margin:8px 0 0;color:#1f2937;font-size:18px;letter-spacing:-.02em}.embedded-suite-card p{margin:7px 0 0;color:#6b7280;font-size:10.5px;line-height:1.5}\n.embedded-suite-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.embedded-suite-tag{border-radius:999px;padding:5px 8px;background:#f6f7f9;color:#596170;font-size:8px;font-weight:800}.embedded-suite-open-row{align-self:end;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;color:#d95f00;font-size:10px;font-weight:950}.embedded-suite-arrow{font-size:22px;line-height:1}.embedded-suite-privacy{display:grid;gap:8px;margin-top:16px;border:1px solid #cce7d8;border-radius:18px;padding:14px 16px;background:#f3fbf6}.embedded-suite-privacy strong{color:#17824f;font-size:11px}.embedded-suite-privacy span{color:#4e6d5e;font-size:9.5px;line-height:1.5}.embedded-suite-footer{padding:4px 18px 0;color:#6b7280;text-align:center;font-size:8.5px;line-height:1.5}.embedded-suite-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:30020;transform:translateX(-50%);width:min(360px,calc(100vw - 28px));border-radius:14px;padding:11px 14px;background:#20242c;color:#fff;text-align:center;font-size:10px;box-shadow:0 14px 34px rgba(0,0,0,.18)}.embedded-suite-toast[hidden]{display:none!important}\n.app-switcher-layer{display:none!important}.embedded-suite-settings-button{width:100%}.header-app-switcher-button{display:grid;width:42px;height:42px;flex:0 0 42px;place-items:center;margin-left:auto;margin-right:8px;border:1px solid rgba(255,255,255,.78);border-radius:13px;background:rgba(255,255,255,.96);color:#d95f00;font:inherit;font-size:21px;font-weight:900;line-height:1;cursor:pointer;box-shadow:0 5px 14px rgba(165,71,0,.12)}\n@media(max-width:560px){.embedded-suite-hero{padding-left:17px;padding-right:17px;padding-bottom:23px;border-radius:0 0 24px 24px}.embedded-suite-brand-mark{width:50px;height:50px;flex-basis:50px;border-radius:16px;font-size:24px}.embedded-suite-hero-row{align-items:flex-start}.embedded-suite-hero-actions{flex-direction:column}.embedded-suite-hero-action{min-height:34px;padding:0 10px}.embedded-suite-content{padding:17px 14px}.embedded-suite-grid{grid-template-columns:1fr;gap:11px}.embedded-suite-card{min-height:200px;border-radius:20px;padding:16px}.header-app-switcher-button{width:38px;height:38px;flex-basis:38px;margin-right:6px;border-radius:11px;font-size:19px}}\n@media(max-width:390px){.embedded-suite-brand p{max-width:180px}.embedded-suite-hero-actions{gap:6px}.embedded-suite-hero-action{font-size:9px}}\n@media(prefers-reduced-motion:reduce){.embedded-suite-card{transition:none}}\n\n.unified-safety-card{overflow:hidden}\n.unified-safety-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}\n.unified-safety-heading h3{margin:0}\n.unified-safety-badge{flex:0 0 auto;border:1px solid #bce8d5;border-radius:999px;padding:6px 9px;background:#e8f8f1;color:#147a52;font-size:.72rem;font-weight:800;white-space:nowrap}\n.unified-safety-list{overflow:hidden;border:1px solid #e1e5ea;border-radius:14px;background:#fafbfd}\n.unified-safety-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #e1e5ea;font-size:.83rem}\n.unified-safety-row:last-child{border-bottom:0}\n.unified-safety-row span{color:#6f7379}.unified-safety-row strong{color:#147a52;text-align:right}\n.unified-safety-note{margin-top:12px;padding:11px 12px;border:1px solid #c8d9ee;border-radius:14px;background:#f7fbff;color:#656b73;font-size:.82rem;line-height:1.55}\n.unified-safety-note strong{color:#20252b}\n.trusted-device-status{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff8ef;color:#7b4b18;font-size:.8rem;line-height:1.5}\n@media(max-width:520px){.unified-safety-heading{flex-direction:column}}\n";
+    style.id = "personalAppsHomeStyles";
+    style.textContent = "\n/* Personal Apps Home */\n.embedded-suite-screen[hidden] {\n  display: none !important;\n}\n\n.embedded-suite-screen {\n  position: fixed;\n  inset: 0;\n  z-index: 30000;\n  overflow-y: auto;\n  overscroll-behavior: contain;\n  background:\n    radial-gradient(circle at 10% -5%, #fff2df 0, transparent 30%),\n    #f6f7fb;\n  color: #1f2937;\n  font-family:\n    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,\n    \"Segoe UI\", sans-serif;\n}\n\n.embedded-suite-screen * {\n  box-sizing: border-box;\n}\n\n.embedded-suite-shell {\n  width: min(760px, 100%);\n  min-height: 100%;\n  margin: 0 auto;\n  padding-bottom: calc(32px + env(safe-area-inset-bottom));\n}\n\n.embedded-suite-hero {\n  position: relative;\n  overflow: hidden;\n  padding:\n    calc(24px + env(safe-area-inset-top))\n    22px\n    28px;\n  border-radius: 0 0 30px 30px;\n  background: linear-gradient(135deg, #ff6600, #ff9200);\n  color: #ffffff;\n  box-shadow: 0 14px 34px rgba(217, 95, 0, .16);\n}\n\n.embedded-suite-hero::before,\n.embedded-suite-hero::after {\n  content: \"\";\n  position: absolute;\n  border: 2px solid rgba(255, 255, 255, .14);\n  border-radius: 50%;\n  pointer-events: none;\n}\n\n.embedded-suite-hero::before {\n  width: 145px;\n  height: 145px;\n  left: -82px;\n  top: -72px;\n}\n\n.embedded-suite-hero::after {\n  width: 190px;\n  height: 190px;\n  right: -75px;\n  bottom: -100px;\n}\n\n.embedded-suite-personal-header {\n  position: relative;\n  z-index: 1;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 18px;\n}\n\n.embedded-suite-personal-copy {\n  min-width: 0;\n}\n\n.embedded-suite-greeting,\n.embedded-suite-personal-copy h1,\n.embedded-suite-profile-status {\n  margin: 0;\n}\n\n.embedded-suite-greeting {\n  color: rgba(255, 255, 255, .84);\n  font-size: 12px;\n  font-weight: 750;\n  letter-spacing: .02em;\n}\n\n.embedded-suite-personal-copy h1 {\n  max-width: 520px;\n  overflow: hidden;\n  margin-top: 3px;\n  color: #ffffff;\n  font-size: clamp(28px, 7vw, 42px);\n  font-weight: 900;\n  letter-spacing: -.045em;\n  line-height: 1.08;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.embedded-suite-status-row {\n  display: inline-flex;\n  align-items: center;\n  max-width: 100%;\n  gap: 7px;\n  margin-top: 10px;\n  border: 1px solid rgba(255, 255, 255, .27);\n  border-radius: 999px;\n  padding: 7px 10px;\n  background: rgba(255, 255, 255, .11);\n  backdrop-filter: blur(5px);\n}\n\n.embedded-suite-status-dot {\n  width: 8px;\n  height: 8px;\n  flex: 0 0 8px;\n  border-radius: 50%;\n  background: #c8ffdb;\n  box-shadow: 0 0 0 3px rgba(200, 255, 219, .16);\n}\n\n.embedded-suite-profile-status {\n  overflow: hidden;\n  color: rgba(255, 255, 255, .94);\n  font-size: 9.5px;\n  font-weight: 750;\n  line-height: 1.25;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.embedded-suite-profile-avatar {\n  display: grid;\n  width: 74px;\n  height: 74px;\n  flex: 0 0 74px;\n  place-items: center;\n  overflow: hidden;\n  border: 3px solid rgba(255, 255, 255, .92);\n  border-radius: 23px;\n  background:\n    linear-gradient(145deg, rgba(255, 255, 255, .98), #fff1df);\n  background-position: center;\n  background-size: cover;\n  color: #d95f00;\n  font-size: 29px;\n  font-weight: 950;\n  box-shadow: 0 12px 28px rgba(145, 58, 0, .2);\n}\n\n.embedded-suite-profile-avatar.has-photo {\n  color: transparent;\n}\n\n.embedded-suite-content {\n  padding: 20px 18px;\n}\n\n.embedded-suite-welcome {\n  margin-bottom: 14px;\n}\n\n.embedded-suite-welcome h2,\n.embedded-suite-welcome p {\n  margin: 0;\n}\n\n.embedded-suite-welcome h2 {\n  color: #1f2937;\n  font-size: 19px;\n}\n\n.embedded-suite-welcome p {\n  margin-top: 4px;\n  color: #6b7280;\n  font-size: 11px;\n  line-height: 1.5;\n}\n\n.embedded-suite-grid {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 14px;\n}\n\n.embedded-suite-card {\n  position: relative;\n  display: grid;\n  width: 100%;\n  min-height: 222px;\n  overflow: hidden;\n  border: 1px solid #eadfd2;\n  border-radius: 24px;\n  padding: 18px;\n  background: #ffffff;\n  color: inherit;\n  text-align: left;\n  text-decoration: none;\n  font: inherit;\n  box-shadow: 0 10px 28px rgba(38, 33, 27, .06);\n  cursor: pointer;\n  transition:\n    transform .16s ease,\n    box-shadow .16s ease;\n}\n\n.embedded-suite-card:hover,\n.embedded-suite-card:focus-visible {\n  transform: translateY(-3px);\n  box-shadow: 0 16px 34px rgba(38, 33, 27, .1);\n  outline: none;\n}\n\n.embedded-suite-card:active {\n  transform: scale(.985);\n}\n\n.embedded-suite-current-badge {\n  position: absolute;\n  top: 15px;\n  right: 15px;\n  border-radius: 999px;\n  padding: 5px 8px;\n  background: #fff1e3;\n  color: #d95f00;\n  font-size: 8px;\n  font-weight: 900;\n}\n\n.embedded-suite-app-icon {\n  display: grid;\n  width: 62px;\n  height: 62px;\n  place-items: center;\n  border-radius: 19px;\n  background: #fff0e0;\n  font-size: 31px;\n}\n\n.embedded-suite-card.japa .embedded-suite-app-icon {\n  background: #fff5e8;\n  color: #d95f00;\n  font-size: 35px;\n  font-weight: 900;\n}\n\n.embedded-suite-card h3 {\n  margin: 14px 0 0;\n  color: #1f2937;\n  font-size: 19px;\n  letter-spacing: -.02em;\n}\n\n.embedded-suite-card p {\n  margin: 7px 0 0;\n  color: #6b7280;\n  font-size: 10.5px;\n  line-height: 1.5;\n}\n\n.embedded-suite-tags {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 6px;\n  margin-top: 12px;\n}\n\n.embedded-suite-tag {\n  border-radius: 999px;\n  padding: 5px 8px;\n  background: #f6f7f9;\n  color: #596170;\n  font-size: 8px;\n  font-weight: 800;\n}\n\n.embedded-suite-open-row {\n  align-self: end;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 10px;\n  margin-top: 18px;\n  color: #d95f00;\n  font-size: 10px;\n  font-weight: 950;\n}\n\n.embedded-suite-arrow {\n  font-size: 22px;\n  line-height: 1;\n}\n\n.embedded-suite-privacy {\n  display: grid;\n  gap: 8px;\n  margin-top: 16px;\n  border: 1px solid #cce7d8;\n  border-radius: 18px;\n  padding: 14px 16px;\n  background: #f3fbf6;\n}\n\n.embedded-suite-privacy strong {\n  color: #17824f;\n  font-size: 11px;\n}\n\n.embedded-suite-privacy span {\n  color: #4e6d5e;\n  font-size: 9.5px;\n  line-height: 1.5;\n}\n\n.embedded-suite-footer {\n  padding: 4px 18px 0;\n  color: #6b7280;\n  text-align: center;\n  font-size: 8.5px;\n  line-height: 1.5;\n}\n\n.app-switcher-layer {\n  display: none !important;\n}\n\n.embedded-suite-settings-button {\n  width: 100%;\n}\n\n.header-app-switcher-button {\n  display: grid;\n  width: 42px;\n  height: 42px;\n  flex: 0 0 42px;\n  place-items: center;\n  margin-left: auto;\n  margin-right: 8px;\n  border: 1px solid rgba(255, 255, 255, .78);\n  border-radius: 13px;\n  background: rgba(255, 255, 255, .96);\n  color: #d95f00;\n  font: inherit;\n  font-size: 21px;\n  font-weight: 900;\n  line-height: 1;\n  cursor: pointer;\n  box-shadow: 0 5px 14px rgba(165, 71, 0, .12);\n}\n\n@media (max-width: 560px) {\n  .embedded-suite-hero {\n    padding:\n      calc(21px + env(safe-area-inset-top))\n      17px\n      23px;\n    border-radius: 0 0 24px 24px;\n  }\n\n  .embedded-suite-personal-header {\n    gap: 12px;\n  }\n\n  .embedded-suite-personal-copy h1 {\n    font-size: clamp(25px, 8vw, 34px);\n  }\n\n  .embedded-suite-profile-avatar {\n    width: 62px;\n    height: 62px;\n    flex-basis: 62px;\n    border-radius: 19px;\n    font-size: 25px;\n  }\n\n  .embedded-suite-status-row {\n    max-width: min(100%, 245px);\n  }\n\n  .embedded-suite-content {\n    padding: 17px 14px;\n  }\n\n  .embedded-suite-grid {\n    grid-template-columns: 1fr;\n    gap: 11px;\n  }\n\n  .embedded-suite-card {\n    min-height: 195px;\n    border-radius: 20px;\n    padding: 16px;\n  }\n\n  .header-app-switcher-button {\n    width: 38px;\n    height: 38px;\n    flex-basis: 38px;\n    margin-right: 6px;\n    border-radius: 11px;\n    font-size: 19px;\n  }\n}\n\n@media (max-width: 370px) {\n  .embedded-suite-profile-avatar {\n    width: 56px;\n    height: 56px;\n    flex-basis: 56px;\n    border-radius: 17px;\n  }\n\n  .embedded-suite-profile-status {\n    max-width: 185px;\n  }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .embedded-suite-card {\n    transition: none;\n  }\n}\n\n.unified-safety-card {\n  overflow: hidden;\n}\n\n.unified-safety-heading {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 12px;\n}\n\n.unified-safety-heading h3 {\n  margin: 0;\n}\n\n.unified-safety-badge {\n  flex: 0 0 auto;\n  border: 1px solid #bce8d5;\n  border-radius: 999px;\n  padding: 6px 9px;\n  background: #e8f8f1;\n  color: #147a52;\n  font-size: .72rem;\n  font-weight: 800;\n  white-space: nowrap;\n}\n\n.unified-safety-list {\n  overflow: hidden;\n  border: 1px solid #e1e5ea;\n  border-radius: 14px;\n  background: #fafbfd;\n}\n\n.unified-safety-row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  padding: 10px 12px;\n  border-bottom: 1px solid #e1e5ea;\n  font-size: .83rem;\n}\n\n.unified-safety-row:last-child {\n  border-bottom: 0;\n}\n\n.unified-safety-row span {\n  color: #6f7379;\n}\n\n.unified-safety-row strong {\n  color: #147a52;\n  text-align: right;\n}\n\n.unified-safety-note {\n  margin-top: 12px;\n  padding: 11px 12px;\n  border: 1px solid #c8d9ee;\n  border-radius: 14px;\n  background: #f7fbff;\n  color: #656b73;\n  font-size: .82rem;\n  line-height: 1.55;\n}\n\n.unified-safety-note strong {\n  color: #20252b;\n}\n\n.trusted-device-status {\n  margin-top: 10px;\n  padding: 10px 12px;\n  border-radius: 12px;\n  background: #fff8ef;\n  color: #7b4b18;\n  font-size: .8rem;\n  line-height: 1.5;\n}\n";
     document.head.appendChild(style);
   }
 })();
 
 (() => {
   "use strict";
+
   const BIRTHDAY_URL = "https://parmjee2026.github.io/Birthday-Reminder-Web-App/";
   const JAPA_URL = "https://parmeshwarbtpl-rgb.github.io/japa-counter/";
-  const path = location.pathname.toLowerCase();
+
+  const path = window.location.pathname.toLowerCase();
   const title = document.title.toLowerCase();
-  const current = (path.includes("japa-counter") || title.includes("naam jaap")) ? "japa" : "birthday";
-  let installPrompt = null;
+
+  const current =
+    path.includes("japa-counter") ||
+    title.includes("naam jaap")
+      ? "japa"
+      : "birthday";
+
+  function cleanText(value) {
+    return String(value || "")
+      .replace(/^welcome\s*,?\s*/i, "")
+      .trim();
+  }
+
+  function usableName(value) {
+    const name = cleanText(value);
+
+    if (
+      !name ||
+      /^google user$/i.test(name) ||
+      /^user$/i.test(name)
+    ) {
+      return "";
+    }
+
+    return name;
+  }
+
+  function firstInitial(name) {
+    const clean = cleanText(name);
+    return clean ? clean.charAt(0).toUpperCase() : "G";
+  }
+
+  function textFrom(selectors) {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      const text = element?.textContent?.trim();
+
+      if (text) return text;
+    }
+
+    return "";
+  }
+
+  function birthdayIdentity() {
+    let profile = {};
+
+    try {
+      profile = JSON.parse(
+        localStorage.getItem("birthdayReminder.profile.v1") || "{}"
+      );
+    } catch (error) {
+      console.warn("Birthday profile could not be read:", error);
+    }
+
+    const name =
+      usableName(profile.name) ||
+      usableName(
+        textFrom([
+          "#sidebarUserName",
+          "#dashboardWelcome"
+        ])
+      ) ||
+      "Guest";
+
+    const status =
+      String(profile.status || "").trim() ||
+      textFrom([
+        "#topUserStatus",
+        "#sidebarUserStatus"
+      ]) ||
+      (
+        name === "Guest"
+          ? "Choose an app to continue"
+          : "Private Google Contacts"
+      );
+
+    return {
+      name,
+      status,
+      avatarSource: document.getElementById("topProfileCircle")
+    };
+  }
+
+  function japaIdentity() {
+    const name =
+      usableName(
+        textFrom([
+          "#accountButton [data-user-name]",
+          ".account-card [data-user-name]",
+          "[data-user-name]"
+        ])
+      ) ||
+      "Guest";
+
+    const status =
+      textFrom([
+        "#accountButton [data-local-profile-status]",
+        ".account-card [data-local-profile-status]",
+        "[data-local-profile-status]"
+      ]) ||
+      (
+        name === "Guest"
+          ? "Choose an app to continue"
+          : "Naam Jaap · Trusted Device"
+      );
+
+    return {
+      name,
+      status,
+      avatarSource:
+        document.querySelector(
+          "#accountButton img, " +
+          "img[data-user-photo], " +
+          ".account-avatar img"
+        ),
+      initialSource:
+        textFrom([
+          "#accountButton [data-user-initial]",
+          ".account-avatar",
+          "[data-user-initial]"
+        ])
+    };
+  }
+
+  function readIdentity() {
+    return current === "birthday"
+      ? birthdayIdentity()
+      : japaIdentity();
+  }
+
+  function applyAvatar(avatar, identity) {
+    if (!avatar) return;
+
+    let backgroundImage = "";
+    let imageSource = "";
+
+    const source = identity.avatarSource;
+
+    if (source) {
+      if (source instanceof HTMLImageElement) {
+        imageSource =
+          source.currentSrc ||
+          source.src ||
+          "";
+      } else {
+        backgroundImage =
+          source.style.backgroundImage ||
+          getComputedStyle(source).backgroundImage ||
+          "";
+      }
+    }
+
+    if (
+      imageSource &&
+      !imageSource.endsWith("#")
+    ) {
+      avatar.style.backgroundImage =
+        `url("${imageSource.replace(/"/g, "%22")}")`;
+
+      avatar.textContent = "";
+      avatar.classList.add("has-photo");
+      return;
+    }
+
+    if (
+      backgroundImage &&
+      backgroundImage !== "none" &&
+      !backgroundImage.includes('url("")')
+    ) {
+      avatar.style.backgroundImage = backgroundImage;
+      avatar.textContent = "";
+      avatar.classList.add("has-photo");
+      return;
+    }
+
+    avatar.style.backgroundImage = "";
+
+    avatar.textContent =
+      identity.initialSource?.trim()?.charAt(0)?.toUpperCase() ||
+      firstInitial(identity.name);
+
+    avatar.classList.remove("has-photo");
+  }
+
+  function updatePersonalHeader() {
+    const identity = readIdentity();
+
+    const nameElement =
+      document.getElementById("embeddedSuiteUserName");
+
+    const statusElement =
+      document.getElementById("embeddedSuiteUserStatus");
+
+    const avatar =
+      document.getElementById("embeddedSuiteUserAvatar");
+
+    if (nameElement) {
+      nameElement.textContent = identity.name;
+      nameElement.title = identity.name;
+    }
+
+    if (statusElement) {
+      statusElement.textContent = identity.status;
+      statusElement.title = identity.status;
+    }
+
+    applyAvatar(avatar, identity);
+  }
 
   function card(kind) {
     const isBirthday = kind === "birthday";
     const isCurrent = kind === current;
+
     const tag = isCurrent ? "button" : "a";
+
     const attrs = isCurrent
       ? 'type="button" data-enter-current-app'
       : `href="${isBirthday ? BIRTHDAY_URL : JAPA_URL}?enter=1" data-switch-to-app`;
+
     const icon = isBirthday ? "🎂" : "ॐ";
-    const name = isBirthday ? "Birthday Reminder" : "Naam Jaap Counter";
-    const desc = isBirthday
+
+    const name = isBirthday
+      ? "Birthday Reminder"
+      : "Naam Jaap Counter";
+
+    const description = isBirthday
       ? "Privately manage birthdays, wishes, calendar exports, backups and your local contact copy."
       : "Continue your mantra counting, goals, history and secure account synchronization.";
+
     const tags = isBirthday
-      ? '<span class="embedded-suite-tag">Google Contacts Read Only</span><span class="embedded-suite-tag">Device Privacy</span><span class="embedded-suite-tag">Calendar</span>'
-      : '<span class="embedded-suite-tag">Jaap Counter</span><span class="embedded-suite-tag">History</span><span class="embedded-suite-tag">Secure Sync</span>';
-    return `<${tag} class="embedded-suite-card ${kind === 'japa' ? 'japa' : 'birthday'}" ${attrs}>
-      ${isCurrent ? '<span class="embedded-suite-current-badge">Current App</span>' : ''}
-      <div class="embedded-suite-app-icon" aria-hidden="true">${icon}</div>
-      <div class="embedded-suite-label">✦ My App Suite</div>
-      <h3>${name}</h3><p>${desc}</p><div class="embedded-suite-tags">${tags}</div>
-      <div class="embedded-suite-open-row"><span>Open ${name}</span><span class="embedded-suite-arrow">→</span></div>
-    </${tag}>`;
+      ? `
+        <span class="embedded-suite-tag">Contacts Read Only</span>
+        <span class="embedded-suite-tag">Device Privacy</span>
+        <span class="embedded-suite-tag">Calendar</span>
+      `
+      : `
+        <span class="embedded-suite-tag">Jaap Counter</span>
+        <span class="embedded-suite-tag">History</span>
+        <span class="embedded-suite-tag">Secure Sync</span>
+      `;
+
+    return `
+      <${tag}
+        class="embedded-suite-card ${kind === "japa" ? "japa" : "birthday"}"
+        ${attrs}
+      >
+        ${
+          isCurrent
+            ? '<span class="embedded-suite-current-badge">Current App</span>'
+            : ""
+        }
+
+        <div class="embedded-suite-app-icon" aria-hidden="true">
+          ${icon}
+        </div>
+
+        <h3>${name}</h3>
+
+        <p>${description}</p>
+
+        <div class="embedded-suite-tags">
+          ${tags}
+        </div>
+
+        <div class="embedded-suite-open-row">
+          <span>Open ${name}</span>
+          <span class="embedded-suite-arrow" aria-hidden="true">→</span>
+        </div>
+      </${tag}>
+    `;
   }
 
   function markup() {
-    return `<section id="embeddedSuiteLauncher" class="embedded-suite-screen" aria-label="My App Suite">
-      <div class="embedded-suite-shell">
-        <header class="embedded-suite-hero"><div class="embedded-suite-hero-row">
-          <div class="embedded-suite-brand"><div class="embedded-suite-brand-mark" aria-hidden="true">✦</div><div><h1>My App Suite</h1><p>Your apps. Separate data. One clean home.</p></div></div>
-          <div class="embedded-suite-hero-actions"><button id="embeddedSuiteShare" class="embedded-suite-hero-action" type="button">↗ Share</button><button id="embeddedSuiteInstall" class="embedded-suite-hero-action" type="button">⬇ Install</button></div>
-        </div><div class="embedded-suite-identity"><span class="embedded-suite-dot" aria-hidden="true"></span><span>2 independent apps · 1 common home</span></div></header>
-        <main class="embedded-suite-content"><section class="embedded-suite-welcome"><h2>Your Apps</h2><p>Open either app from here. Their login, permissions and stored data remain separate.</p></section>
-          <section class="embedded-suite-grid" aria-label="Your apps">${card('birthday')}${card('japa')}</section>
-          <section class="embedded-suite-privacy"><strong>🔒 Same launcher, separate app data</strong><span>My App Suite is built into both apps. It does not read, copy or combine Birthday Reminder contacts with Naam Jaap activity.</span></section>
-        </main><footer class="embedded-suite-footer">Built into this app · No separate My App Suite installation required</footer>
-      </div><div id="embeddedSuiteToast" class="embedded-suite-toast" role="status" hidden></div></section>`;
+    return `
+      <section
+        id="embeddedSuiteLauncher"
+        class="embedded-suite-screen"
+        aria-label="Your apps"
+      >
+        <div class="embedded-suite-shell">
+          <header class="embedded-suite-hero">
+            <div class="embedded-suite-personal-header">
+              <div class="embedded-suite-personal-copy">
+                <p class="embedded-suite-greeting">Welcome</p>
+
+                <h1 id="embeddedSuiteUserName">Guest</h1>
+
+                <div class="embedded-suite-status-row">
+                  <span
+                    class="embedded-suite-status-dot"
+                    aria-hidden="true"
+                  ></span>
+
+                  <p
+                    id="embeddedSuiteUserStatus"
+                    class="embedded-suite-profile-status"
+                  >
+                    Choose an app to continue
+                  </p>
+                </div>
+              </div>
+
+              <div
+                id="embeddedSuiteUserAvatar"
+                class="embedded-suite-profile-avatar"
+                aria-label="User profile"
+              >
+                G
+              </div>
+            </div>
+          </header>
+
+          <main class="embedded-suite-content">
+            <section class="embedded-suite-welcome">
+              <h2>Your Apps</h2>
+
+              <p>
+                Choose an app. Login, permissions and stored data remain separate.
+              </p>
+            </section>
+
+            <section class="embedded-suite-grid" aria-label="Your apps">
+              ${card("birthday")}
+              ${card("japa")}
+            </section>
+
+            <section class="embedded-suite-privacy">
+              <strong>🔒 Separate apps, separate data</strong>
+
+              <span>
+                Birthday Reminder contacts and Naam Jaap activity are never combined or transferred between apps.
+              </span>
+            </section>
+          </main>
+
+          <footer class="embedded-suite-footer">
+            Choose an app to continue
+          </footer>
+        </div>
+      </section>
+    `;
   }
 
   function setup() {
     document.getElementById("headerAppSwitcherButton")?.remove();
     document.getElementById("myAppSwitcherLayer")?.remove();
-    if (!document.getElementById("embeddedSuiteLauncher")) document.body.insertAdjacentHTML("afterbegin", markup());
-    const launcher=document.getElementById("embeddedSuiteLauncher");
-    const headerBirthday=document.getElementById("appSwitcherButton");
 
-    function toast(msg){const el=document.getElementById("embeddedSuiteToast");if(!el)return;el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
-    function show(){const old=document.getElementById("appSwitcherLayer");if(old)old.hidden=true;launcher.hidden=false;document.body.style.overflow="hidden";launcher.scrollTop=0;headerBirthday?.setAttribute("aria-expanded","true");document.getElementById("embeddedSuiteHeaderButton")?.setAttribute("aria-expanded","true")}
-    function hide(){launcher.hidden=true;document.body.style.overflow="";headerBirthday?.setAttribute("aria-expanded","false");document.getElementById("embeddedSuiteHeaderButton")?.setAttribute("aria-expanded","false")}
-
-    launcher.querySelectorAll("[data-enter-current-app]").forEach(b=>b.addEventListener("click",hide));
-    launcher.querySelectorAll("[data-switch-to-app]").forEach(a=>{a.removeAttribute("target");a.removeAttribute("rel")});
-
-    if(headerBirthday) headerBirthday.addEventListener("click",e=>{e.preventDefault();e.stopImmediatePropagation();show()},true);
-
-    if(current==="japa"){
-      const header=document.querySelector(".app-header"), account=document.getElementById("accountButton");
-      if(header&&account&&!document.getElementById("embeddedSuiteHeaderButton")){const b=document.createElement("button");b.id="embeddedSuiteHeaderButton";b.className="header-app-switcher-button";b.type="button";b.title="My Apps";b.setAttribute("aria-label","Open My Apps");b.setAttribute("aria-haspopup","dialog");b.setAttribute("aria-expanded","false");b.innerHTML='<span aria-hidden="true">▦</span>';header.insertBefore(b,account);b.addEventListener("click",show)}
-      const auth=document.querySelector("#authGate .auth-card");
-      if(auth&&!document.getElementById("embeddedSuiteAuthButton")){const b=document.createElement("button");b.id="embeddedSuiteAuthButton";b.className="secondary-btn full-width";b.type="button";b.textContent="▦ My Apps";b.addEventListener("click",show);const privacy=auth.querySelector(".privacy-note");auth.insertBefore(b,privacy||null)}
-    } else {
-      const actions=document.querySelector(".login-secondary-actions");
-      if(actions&&!document.getElementById("loginEmbeddedSuiteButton")){const b=document.createElement("button");b.id="loginEmbeddedSuiteButton";b.className="secondary-button login-install-button";b.type="button";b.textContent="▦ My Apps";b.addEventListener("click",show);actions.appendChild(b)}
+    if (!document.getElementById("embeddedSuiteLauncher")) {
+      document.body.insertAdjacentHTML(
+        "afterbegin",
+        markup()
+      );
     }
 
-    const more=document.querySelector(".more-apps-card");
-    if(more){more.innerHTML='<h3>App Switcher</h3><p>My App Suite is built directly into this app. No separate launcher app is required.</p><button class="'+(current==='japa'?'primary-btn full-width':'orange-action-button')+' embedded-suite-settings-button" type="button" data-open-embedded-suite>▦ Open My Apps</button>';more.querySelector("[data-open-embedded-suite]")?.addEventListener("click",show)}
+    const launcher =
+      document.getElementById("embeddedSuiteLauncher");
 
-    document.getElementById("embeddedSuiteShare")?.addEventListener("click",async()=>{
-      if(current==="birthday"){const existing=document.getElementById("loginShareButton");if(existing){existing.click();return}}
-      const data={title:current==="birthday"?"Birthday Reminder":"Naam Jaap Counter",text:current==="birthday"?"Privacy-first birthday reminder.":"Naam Jaap, mala goals and history.",url:current==="birthday"?BIRTHDAY_URL:JAPA_URL};
-      try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(data.url);toast("App link copied.")}}catch(e){if(e?.name!=="AbortError")toast("Share could not be opened.")}
-    });
+    const birthdayHeaderButton =
+      document.getElementById("appSwitcherButton");
 
-    document.getElementById("embeddedSuiteInstall")?.addEventListener("click",async()=>{
-      const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;if(standalone){toast("This app is already installed.");return}
-      if(current==="birthday"){const existing=document.getElementById("loginInstallButton")||document.getElementById("installButton");if(existing){existing.click();return}}
-      if(installPrompt){try{await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;return}catch(e){console.warn(e)}}
-      toast(/iphone|ipad|ipod/i.test(navigator.userAgent)?"Tap Share → Add to Home Screen.":"Open browser menu → Install app / Add to Home screen.")
-    });
+    function show() {
+      const oldLayer =
+        document.getElementById("appSwitcherLayer");
 
-    const u=new URL(location.href);if(u.searchParams.get("enter")==="1"){hide();u.searchParams.delete("enter");history.replaceState(null,"",u.pathname+(u.search?u.search:"")+u.hash)}else show();
+      if (oldLayer) oldLayer.hidden = true;
+
+      launcher.hidden = false;
+      document.body.style.overflow = "hidden";
+      launcher.scrollTop = 0;
+
+      birthdayHeaderButton?.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+
+      document
+        .getElementById("embeddedSuiteHeaderButton")
+        ?.setAttribute("aria-expanded", "true");
+
+      updatePersonalHeader();
+    }
+
+    function hide() {
+      launcher.hidden = true;
+      document.body.style.overflow = "";
+
+      birthdayHeaderButton?.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
+      document
+        .getElementById("embeddedSuiteHeaderButton")
+        ?.setAttribute("aria-expanded", "false");
+    }
+
+    launcher
+      .querySelectorAll("[data-enter-current-app]")
+      .forEach((button) => {
+        button.addEventListener("click", hide);
+      });
+
+    launcher
+      .querySelectorAll("[data-switch-to-app]")
+      .forEach((link) => {
+        link.removeAttribute("target");
+        link.removeAttribute("rel");
+      });
+
+    if (birthdayHeaderButton) {
+      birthdayHeaderButton.addEventListener(
+        "click",
+        (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          show();
+        },
+        true
+      );
+    }
+
+    if (current === "japa") {
+      const header =
+        document.querySelector(".app-header");
+
+      const account =
+        document.getElementById("accountButton");
+
+      if (
+        header &&
+        account &&
+        !document.getElementById("embeddedSuiteHeaderButton")
+      ) {
+        const button = document.createElement("button");
+
+        button.id = "embeddedSuiteHeaderButton";
+        button.className = "header-app-switcher-button";
+        button.type = "button";
+        button.title = "Your Apps";
+        button.setAttribute("aria-label", "Open Your Apps");
+        button.setAttribute("aria-haspopup", "dialog");
+        button.setAttribute("aria-expanded", "false");
+        button.innerHTML =
+          '<span aria-hidden="true">▦</span>';
+
+        header.insertBefore(button, account);
+        button.addEventListener("click", show);
+      }
+
+      const authCard =
+        document.querySelector("#authGate .auth-card");
+
+      if (
+        authCard &&
+        !document.getElementById("embeddedSuiteAuthButton")
+      ) {
+        const button = document.createElement("button");
+
+        button.id = "embeddedSuiteAuthButton";
+        button.className = "secondary-btn full-width";
+        button.type = "button";
+        button.textContent = "▦ Your Apps";
+        button.addEventListener("click", show);
+
+        const privacy =
+          authCard.querySelector(".privacy-note");
+
+        authCard.insertBefore(
+          button,
+          privacy || null
+        );
+      }
+    } else {
+      const actions =
+        document.querySelector(".login-secondary-actions");
+
+      if (
+        actions &&
+        !document.getElementById("loginEmbeddedSuiteButton")
+      ) {
+        const button = document.createElement("button");
+
+        button.id = "loginEmbeddedSuiteButton";
+        button.className =
+          "secondary-button login-install-button";
+
+        button.type = "button";
+        button.textContent = "▦ Your Apps";
+        button.addEventListener("click", show);
+
+        actions.appendChild(button);
+      }
+    }
+
+    const moreAppsCard =
+      document.querySelector(".more-apps-card");
+
+    if (moreAppsCard) {
+      const buttonClass =
+        current === "japa"
+          ? "primary-btn full-width"
+          : "orange-action-button";
+
+      moreAppsCard.innerHTML = `
+        <h3>App Switcher</h3>
+
+        <p>
+          Open Birthday Reminder or Naam Jaap Counter from one screen.
+          Their data remains separate.
+        </p>
+
+        <button
+          class="${buttonClass} embedded-suite-settings-button"
+          type="button"
+          data-open-embedded-suite
+        >
+          ▦ Open Your Apps
+        </button>
+      `;
+
+      moreAppsCard
+        .querySelector("[data-open-embedded-suite]")
+        ?.addEventListener("click", show);
+    }
+
+    updatePersonalHeader();
+
+    window.setInterval(
+      updatePersonalHeader,
+      1200
+    );
+
+    window.addEventListener(
+      "storage",
+      updatePersonalHeader
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (!document.hidden) updatePersonalHeader();
+      }
+    );
+
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.get("enter") === "1") {
+      hide();
+      url.searchParams.delete("enter");
+
+      window.history.replaceState(
+        null,
+        "",
+        url.pathname +
+          (url.search ? url.search : "") +
+          url.hash
+      );
+    } else {
+      show();
+    }
   }
 
-  addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e});
-  addEventListener("appinstalled",()=>{installPrompt=null});
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});else setup();
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      setup,
+      { once: true }
+    );
+  } else {
+    setup();
+  }
 })();
-
 
 
 (() => {
@@ -117,20 +600,27 @@
     const settingsView = document.querySelector(
       '#settingsView, [data-view="settings"]'
     );
-    const accountCard = settingsView?.querySelector(".account-card");
+
+    const accountCard =
+      settingsView?.querySelector(".account-card");
 
     if (!settingsView || !accountCard) return;
 
     const card = document.createElement("section");
+
     card.id = "unifiedDataSafetyCard";
     card.className = "card unified-safety-card";
+
     card.innerHTML = `
       <div class="unified-safety-heading">
         <div>
           <p class="eyebrow">Data Safety</p>
           <h3>App Data Safety</h3>
         </div>
-        <span class="unified-safety-badge">Privacy First</span>
+
+        <span class="unified-safety-badge">
+          Privacy First
+        </span>
       </div>
 
       <div class="unified-safety-list">
@@ -138,10 +628,12 @@
           <span>Google password / client secret</span>
           <strong>Never stored</strong>
         </div>
+
         <div class="unified-safety-row">
           <span>Analytics / advertising SDK</span>
           <strong>Not used</strong>
         </div>
+
         <div class="unified-safety-row">
           <span>Birthday Reminder data received</span>
           <strong>None</strong>
@@ -155,16 +647,24 @@
         are not transferred to this app.
       </div>
 
-      <div id="trustedDeviceStatus" class="trusted-device-status">
+      <div
+        id="trustedDeviceStatus"
+        class="trusted-device-status"
+      >
         Trusted device access: checking…
       </div>
     `;
 
-    accountCard.parentElement.insertBefore(card, accountCard);
+    accountCard.parentElement.insertBefore(
+      card,
+      accountCard
+    );
   }
 
   function updateTrustedStatus() {
-    const status = document.getElementById("trustedDeviceStatus");
+    const status =
+      document.getElementById("trustedDeviceStatus");
+
     if (!status) return;
 
     const hasUser =
@@ -178,44 +678,43 @@
     if (live) {
       status.textContent =
         "Trusted Device: active · Cloud sync is connected.";
-    } else if (hasUser) {
+      return;
+    }
+
+    if (hasUser) {
       status.textContent =
         "Trusted Device: local mode active · Reconnect only when cloud sync is needed.";
-    } else {
-      status.textContent =
-        "Trusted Device: sign in once to verify this device.";
+      return;
     }
-  }
 
-  function improveLoginCopy() {
-    const privacy = document.querySelector("#authGate .privacy-note");
-    if (!privacy || privacy.querySelector("[data-trusted-device-copy]")) return;
-
-    const extra = document.createElement("div");
-    extra.dataset.trustedDeviceCopy = "";
-    extra.style.marginTop = "8px";
-    extra.textContent =
-      "Trusted device: after verified sign-in, the installed app can reopen locally. Cloud sync may require reconnection.";
-    privacy.appendChild(extra);
+    status.textContent =
+      "Trusted Device: sign in once to verify this device.";
   }
 
   function initialize() {
     buildSafetyCard();
-    improveLoginCopy();
     updateTrustedStatus();
 
-    const reconnect = document.getElementById("reconnectBtn");
-    if (reconnect) reconnect.textContent = "Reconnect Sync";
+    const reconnect =
+      document.getElementById("reconnectBtn");
 
-    window.setInterval(updateTrustedStatus, 3000);
-    window.addEventListener("online", updateTrustedStatus);
-    window.addEventListener("offline", updateTrustedStatus);
+    if (reconnect) {
+      reconnect.textContent = "Reconnect Sync";
+    }
+
+    window.setInterval(
+      updateTrustedStatus,
+      3000
+    );
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize, { once: true });
+    document.addEventListener(
+      "DOMContentLoaded",
+      initialize,
+      { once: true }
+    );
   } else {
     initialize();
   }
 })();
-
