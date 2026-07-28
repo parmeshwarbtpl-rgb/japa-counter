@@ -84,9 +84,9 @@
                     overflow: visible !important;
                     margin: 0 !important;
                     font-size: clamp(
-                        17px,
-                        4.8vw,
-                        20px
+                        19px,
+                        5.2vw,
+                        22px
                     ) !important;
                     line-height: 1.08 !important;
                     letter-spacing: -.035em;
@@ -103,7 +103,7 @@
                     margin-top: 4px !important;
                     font-size: 0 !important;
                     line-height: 1.2 !important;
-                    text-overflow: ellipsis !important;
+                    text-overflow: clip !important;
                     white-space: nowrap !important;
                 }
 
@@ -116,7 +116,7 @@
                             255,
                             .88
                         );
-                    font-size: 10px !important;
+                    font-size: 11px !important;
                     line-height: 1.2 !important;
                     white-space: nowrap !important;
                 }
@@ -332,14 +332,14 @@
             status === "online" ||
             text.includes("synced")
         ) {
-            return "Google Sheets • Synced";
+            return "Counter • Synced";
         }
 
         if (
             status === "offline" ||
             text.includes("offline")
         ) {
-            return "Offline • Saved locally";
+            return "Counter • Offline";
         }
 
         if (
@@ -347,24 +347,24 @@
             text.includes("retry") ||
             text.includes("failed")
         ) {
-            return "Sync • Retry";
+            return "Counter • Retry";
         }
 
         if (
             text.includes("waiting") ||
             text.includes("pending")
         ) {
-            return "Sync • Pending";
+            return "Counter • Pending";
         }
 
         if (
             text.includes("syncing") ||
             text.includes("connecting")
         ) {
-            return "Google Sheets • Syncing";
+            return "Counter • Syncing";
         }
 
-        return "Google Sheets";
+        return "Counter • Ready";
     }
 
     function updateMobileConnectionLabel() {
@@ -501,8 +501,29 @@
         }
     }
 
+    function updateCompactBrand() {
+        const title =
+            document.querySelector(
+                "#appRoot .header-brand h1"
+            );
+
+        if (title) {
+            title.textContent =
+                "Naam Jaap";
+
+            title.setAttribute(
+                "aria-label",
+                "Naam Jaap Counter"
+            );
+
+            title.title =
+                "Naam Jaap Counter";
+        }
+    }
+
     function initialize() {
         installStyles();
+        updateCompactBrand();
         updateMobileConnectionLabel();
         normalizeSyncCard();
         observeStatus();
