@@ -1,3 +1,263 @@
+
+/* Naam Jaap mobile header layout fix */
+(() => {
+  "use strict";
+
+  if (
+    document.getElementById(
+      "naamJaapHeaderLayoutFix"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "naamJaapHeaderLayoutFix";
+
+  style.textContent = `
+    #appRoot .app-header {
+      display: grid !important;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto !important;
+      grid-template-areas:
+        "brand switcher"
+        "account account";
+      align-items: center !important;
+      gap: 14px 12px !important;
+      min-height: 0 !important;
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        18px
+        18px !important;
+    }
+
+    #appRoot .header-brand {
+      grid-area: brand;
+      min-width: 0;
+      gap: 12px !important;
+    }
+
+    #appRoot .header-brand > div:last-child {
+      min-width: 0;
+    }
+
+    #appRoot .brand-mark {
+      width: 54px !important;
+      height: 54px !important;
+      flex: 0 0 54px !important;
+      border-radius: 17px !important;
+      font-size: 31px !important;
+    }
+
+    #appRoot .header-brand h1 {
+      overflow: hidden;
+      margin: 0;
+      font-size: clamp(
+        20px,
+        5.4vw,
+        26px
+      ) !important;
+      line-height: 1.08 !important;
+      letter-spacing: -.025em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #appRoot .connection-text {
+      overflow: hidden;
+      margin-top: 5px !important;
+      font-size: 12px !important;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #embeddedSuiteHeaderButton,
+    #headerAppSwitcherButton {
+      grid-area: switcher;
+      align-self: center;
+      justify-self: end;
+      width: 46px !important;
+      height: 46px !important;
+      min-width: 46px;
+      margin: 0 !important;
+      border-radius: 14px !important;
+      font-size: 21px !important;
+    }
+
+    #appRoot .account-chip {
+      grid-area: account;
+      display: grid !important;
+      grid-template-columns:
+        48px
+        minmax(0, 1fr);
+      align-items: center;
+      justify-self: stretch;
+      gap: 11px !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 62px;
+      padding:
+        7px
+        13px
+        7px
+        7px !important;
+      border-radius: 19px !important;
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          .15
+        ) !important;
+      text-align: left;
+    }
+
+    #appRoot .account-initial {
+      width: 48px !important;
+      height: 48px !important;
+      font-size: 18px !important;
+    }
+
+    #appRoot .account-initial.has-photo {
+      background-position: center;
+      background-size: cover;
+    }
+
+    #appRoot .account-chip-copy {
+      display: block !important;
+      min-width: 0;
+    }
+
+    #appRoot .account-chip-name {
+      display: block !important;
+      overflow: hidden;
+      max-width: none !important;
+      color: #ffffff;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #appRoot .account-chip-status {
+      display: block !important;
+      overflow: hidden;
+      margin-top: 3px;
+      color:
+        rgba(
+          255,
+          255,
+          255,
+          .82
+        );
+      font-size: 10px !important;
+      font-weight: 600;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 420px) {
+      #appRoot .app-header {
+        gap: 13px 9px !important;
+        padding:
+          calc(
+            16px +
+            env(safe-area-inset-top)
+          )
+          14px
+          16px !important;
+      }
+
+      #appRoot .brand-mark {
+        width: 48px !important;
+        height: 48px !important;
+        flex-basis: 48px !important;
+        border-radius: 15px !important;
+        font-size: 28px !important;
+      }
+
+      #appRoot .header-brand {
+        gap: 10px !important;
+      }
+
+      #appRoot .header-brand h1 {
+        font-size: 19px !important;
+      }
+
+      #appRoot .connection-text {
+        font-size: 10.5px !important;
+      }
+
+      #embeddedSuiteHeaderButton,
+      #headerAppSwitcherButton {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px;
+        border-radius: 13px !important;
+        font-size: 19px !important;
+      }
+
+      #appRoot .account-chip {
+        grid-template-columns:
+          44px
+          minmax(0, 1fr);
+        min-height: 58px;
+        padding:
+          7px
+          11px
+          7px
+          7px !important;
+        border-radius: 18px !important;
+      }
+
+      #appRoot .account-initial {
+        width: 44px !important;
+        height: 44px !important;
+      }
+
+      #appRoot .account-chip-name {
+        font-size: 13px !important;
+      }
+
+      #appRoot .account-chip-status {
+        font-size: 9.5px !important;
+      }
+    }
+
+    @media (max-width: 340px) {
+      #appRoot .header-brand h1 {
+        font-size: 17px !important;
+      }
+
+      #appRoot .connection-text {
+        font-size: 9.5px !important;
+      }
+
+      #appRoot .brand-mark {
+        width: 44px !important;
+        height: 44px !important;
+        flex-basis: 44px !important;
+      }
+
+      #embeddedSuiteHeaderButton,
+      #headerAppSwitcherButton {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
+
 (() => {
   "use strict";
 

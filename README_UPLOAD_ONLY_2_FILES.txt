@@ -1,5 +1,5 @@
-NAAM JAAP v2.9.15 — IDENTITY HANDOFF FIX
-=============================================
+NAAM JAAP v2.9.15 — HEADER LAYOUT FIX
+=========================================
 
 Replace only:
 1. ecosystem.js
@@ -7,23 +7,26 @@ Replace only:
 
 Do not edit index.html.
 
-What this fixes:
-- when Birthday Reminder is opened from Naam Jaap,
-  the signed-in Naam Jaap display name is passed securely
-- Birthday saves the display name on that device
-- Birthday then shows Parmeshwar and initial P
-  instead of Welcome back and B
+Fixed mobile header:
+- first row: logo + app title + Apps button
+- second row: full-width profile chip
+- profile name is visible instead of cut off
+- status appears below the name
+- title stays on one line
+- profile photo remains visible
+- dashboard spacing remains clean
 
-Privacy:
-- only the display name is passed
-- it uses a URL fragment (#), which is not sent to GitHub/server
-- the fragment is removed immediately
-- no shared database or backend was added
+After upload:
+1. Wait for GitHub Pages deployment.
+2. Close the installed Naam Jaap app completely.
+3. Open the website once in Chrome.
+4. Refresh twice.
+5. Close Chrome and reopen the installed app.
 
-Unchanged:
+No changes to:
 - Google Sign-In
+- profile data/photo storage
 - Apps Script
 - Google Sheets sync
-- jaap counts/history
+- jaap count/history
 - reminders
-- user activity data

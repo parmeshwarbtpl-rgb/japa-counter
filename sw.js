@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "naam-jaap-counter-v2-9-15-identity-handoff";
+  "naam-jaap-counter-v2-9-15-header-layout-fix";
 
 const APP_SHELL = [
   "./",
