@@ -28,5 +28,8 @@
       "purpose": "any maskable"
     }
   ],
-  "version": "2.5.0"
+  "version": "2.5.0",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "naam-jaap-counter-v2-9-15-sync-status-settings";
+const CACHE_NAME = "naam-jaap-counter-v2-9-15-embedded-suite";
 const APP_SHELL = [
     "./",
     "./index.html",
@@ -23,6 +23,8 @@ const APP_SHELL = [
     "./mobile-ui-fix.js?v=2915",
     "./sync-settings.js?v=2915",
     "./background-music.js?v=2915",
+    "./embedded-suite.css?v=embedded1",
+    "./embedded-suite.js?v=embedded1",
     "./temple-music.mp3?v=2915",
     "./reminder-temple-bell.wav?v=2915",
     "./reminder-morning-chime.wav?v=2915",
@@ -38,7 +40,6 @@ self.addEventListener("install", event => {
             .then(() => self.skipWaiting())
     );
 });
-
 
 self.addEventListener("message", event => {
     if (event.data?.type === "SKIP_WAITING") {

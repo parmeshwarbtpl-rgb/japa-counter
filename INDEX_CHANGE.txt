@@ -1,0 +1,25 @@
+NAAM JAAP COUNTER — EMBEDDED MY APP SUITE
+==========================================
+
+1) In <head>, immediately after:
+   <link rel="stylesheet" href="background-music.css?v=2915">
+
+   add:
+   <link rel="stylesheet" href="embedded-suite.css?v=embedded1">
+   <script src="embedded-suite.js?v=embedded1" defer></script>
+
+2) Upload / replace:
+   embedded-suite.css
+   embedded-suite.js
+   sw.js
+   manifest.json
+
+3) If previous Phase 2/3 lines exist in index.html, remove references to:
+   suite-link.js
+   suite-branding.css
+   suite-branding.js
+   app-switcher.js
+
+Do NOT change auth.js, api.js, config.js, trusted-device.js, app.js, history.js, reminder.js, Apps Script URL, or Google Sign-In setup.
+
+Result: My App Suite becomes the first screen inside Naam Jaap, header ▦ reopens it, and Settings > More Apps becomes an internal switcher.
