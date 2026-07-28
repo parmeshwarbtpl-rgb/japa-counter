@@ -1,32 +1,47 @@
-NAAM JAAP v2.9.15 — HEADER LAYOUT FIX
-=========================================
+NAAM JAAP v2.9.15 — FINAL MOBILE HEADER FIX
+================================================
 
+VIDEO CHECK RESULT
+------------------
+The previous ecosystem header CSS was loading, but mobile-ui-fix.js loaded
+after it and restored the old narrow rules:
+- title width 126px
+- profile max width 116px
+- profile name max width 62px
+- status hidden
+
+THIS FIX
+--------
 Replace only:
-1. ecosystem.js
+1. mobile-ui-fix.js
 2. sw.js
 
+Do not replace ecosystem.js.
 Do not edit index.html.
 
-Fixed mobile header:
-- first row: logo + app title + Apps button
-- second row: full-width profile chip
-- profile name is visible instead of cut off
-- status appears below the name
-- title stays on one line
-- profile photo remains visible
-- dashboard spacing remains clean
+Expected header:
+Row 1:
+[Logo] Naam Jaap Counter          [Apps]
+
+        Google Sheets • Synced
+
+Row 2:
+[Photo] Parmeshwar
+        Naam Jaap • Trusted Device
 
 After upload:
 1. Wait for GitHub Pages deployment.
-2. Close the installed Naam Jaap app completely.
-3. Open the website once in Chrome.
+2. Close Chrome and the installed app completely.
+3. Open the direct URL once in Chrome.
 4. Refresh twice.
-5. Close Chrome and reopen the installed app.
+5. Close Chrome.
+6. Reopen the installed Naam Jaap app.
 
-No changes to:
+Unchanged:
+- embedded Your Apps launcher
+- identity handoff to Birthday Reminder
+- profile photo and profile data
 - Google Sign-In
-- profile data/photo storage
-- Apps Script
-- Google Sheets sync
+- Apps Script and Google Sheets
 - jaap count/history
 - reminders

@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "naam-jaap-counter-v2-9-15-header-layout-fix";
+  "naam-jaap-counter-v2-9-15-final-mobile-header";
 
 const APP_SHELL = [
   "./",
@@ -103,6 +103,9 @@ self.addEventListener("fetch", (event) => {
   if (
     requestUrl.pathname.endsWith(
       "/ecosystem.js"
+    ) ||
+    requestUrl.pathname.endsWith(
+      "/mobile-ui-fix.js"
     )
   ) {
     event.respondWith(
