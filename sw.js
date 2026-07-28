@@ -1,5 +1,5 @@
 const CACHE_NAME =
-  "naam-jaap-counter-v2-9-15-compact-brand-header";
+  "naam-jaap-counter-v2-9-15-phase4-1-today-summary";
 
 const APP_SHELL = [
   "./",
